@@ -1,5 +1,5 @@
 <template>
-  <section class="container-fluid events-container py-5">
+  <section class="container-fluid events-container py-5" id="events-page">
     <h1 class="page-title text-center mb-4">Find Activities & Programs</h1>
 
     <!-- Filters Row -->
@@ -263,4 +263,11 @@ export default {
   border: 2px solid #0d6efd;
   background-color: #e7f1ff;
 }
+
+#events-page {
+  /* margin: 1rem 2rem; */
+  padding: 4rem;
+  max-height: fit-content;
+}
+
 </style>
