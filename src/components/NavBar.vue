@@ -2,9 +2,7 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
     <div class="container-fluid">
       <!-- Brand -->
-      <router-link to="/" class="navbar-brand fw-bold text-primary">
-        TeamUp
-      </router-link>
+      <router-link to="/" class="navbar-brand fw-bold text-primary"> TeamUp </router-link>
 
       <!-- Hamburger toggle for mobile -->
       <button
@@ -46,8 +44,8 @@
 
 <script>
 export default {
-  name: "NavBar",
-};
+  name: 'NavBar',
+}
 </script>
 
 <style scoped>

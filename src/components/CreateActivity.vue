@@ -15,6 +15,7 @@
 
       <div class="mb-3">
         <label class="form-label">Sport Type</label>
+
         <select class="form-select" v-model="activity.sport" required>
           <option disabled value="">Select sport</option>
           <option value="football">Football</option>
@@ -26,17 +27,29 @@
 
       <div class="mb-3">
         <label class="form-label">Maximum Attendees</label>
-        <input type="number" class="form-control" v-model.number="activity.capacity" min="1" required />
+        <input
+          type="number"
+          class="form-control"
+          v-model.number="activity.capacity"
+          min="1"
+          required
+        />
       </div>
 
       <div class="mb-3">
         <label class="form-label">Location Address</label>
-        <input type="text" class="form-control" v-model="addressInput" placeholder="Type address" @blur="geocodeAddress"/>
+        <input
+          type="text"
+          class="form-control"
+          v-model="addressInput"
+          placeholder="Type address"
+          @blur="geocodeAddress"
+        />
       </div>
 
       <div class="mb-3">
         <label class="form-label">Or Set Location on Map</label>
-        <div id="map" style="height: 300px;"></div>
+        <div id="map" style="height: 300px"></div>
         <p class="mt-2 text-muted">Drag the marker to adjust the location.</p>
       </div>
 
@@ -46,8 +59,8 @@
 </template>
 
 <script>
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 export default {
   name: 'CreateActivity',
@@ -59,54 +72,62 @@ export default {
         sport: '',
         capacity: 10,
         location: { lat: -37.8136, lng: 144.9631 }, // Default Melbourne
-        rsvps: 0
+        rsvps: 0,
       },
       addressInput: '',
       map: null,
-      marker: null
-    };
+      marker: null,
+    }
   },
   mounted() {
-    this.map = L.map('map').setView([this.activity.location.lat, this.activity.location.lng], 13);
+    this.map = L.map('map').setView([this.activity.location.lat, this.activity.location.lng], 13)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(this.map);
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(this.map)
 
-    this.marker = L.marker([this.activity.location.lat, this.activity.location.lng], { draggable: true }).addTo(this.map);
+    this.marker = L.marker([this.activity.location.lat, this.activity.location.lng], {
+      draggable: true,
+    }).addTo(this.map)
     this.marker.on('dragend', (e) => {
-      const pos = e.target.getLatLng();
-      this.activity.location.lat = pos.lat;
-      this.activity.location.lng = pos.lng;
-    });
+      const pos = e.target.getLatLng()
+      this.activity.location.lat = pos.lat
+      this.activity.location.lng = pos.lng
+    })
   },
   methods: {
     geocodeAddress() {
-      if (!this.addressInput) return;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.addressInput)}`;
+      if (!this.addressInput) return
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.addressInput)}`
+
       fetch(url)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.length > 0) {
-            const loc = data[0];
-            this.activity.location.lat = parseFloat(loc.lat);
-            this.activity.location.lng = parseFloat(loc.lon);
-            this.map.setView([loc.lat, loc.lon], 15);
-            this.marker.setLatLng([loc.lat, loc.lon]);
+            const loc = data[0]
+            this.activity.location.lat = parseFloat(loc.lat)
+            this.activity.location.lng = parseFloat(loc.lon)
+            this.map.setView([loc.lat, loc.lon], 15)
+            this.marker.setLatLng([loc.lat, loc.lon])
           }
-        });
+        })
     },
+
     submitActivity() {
       // You can replace this with an API call or state management
-      const activities = JSON.parse(localStorage.getItem('activities') || '[]');
-      activities.push(this.activity);
-      localStorage.setItem('activities', JSON.stringify(activities));
-      alert('Activity created successfully!');
-      this.$router.push('/events');
-    }
-  }
-};
+      const activities = JSON.parse(localStorage.getItem('activities') || '[]')
+      activities.push(this.activity)
+      localStorage.setItem('activities', JSON.stringify(activities))
+      alert('Activity created successfully!')
+      this.$router.push('/events')
+    },
+  },
+}
 </script>
 
 <style scoped>
-#map { border: 1px solid #ccc; border-radius: 0.5rem; }
+#map {
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+}
 </style>

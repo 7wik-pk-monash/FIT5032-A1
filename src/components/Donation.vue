@@ -1,21 +1,31 @@
 <template>
+
   <section class="container donation-container py-5">
+
     <h1 class="page-title text-center mb-3">Equip a Community</h1>
     <p class="page-subtitle text-center mb-5">
-      Your donation helps us purchase sports equipment for underrepresented communities. Choose a kit or enter a custom amount.
+      Your donation helps us purchase sports equipment for underrepresented communities. Choose a
+      kit or enter a custom amount.
     </p>
 
     <div class="row g-4">
       <div v-for="item in donationItems" :key="item.key" class="col-12 col-md-6 col-lg-3">
-        <div class="card donation-card h-100 p-3 d-flex flex-column justify-content-between shadow-sm">
+        <div
+          class="card donation-card h-100 p-3 d-flex flex-column justify-content-between shadow-sm"
+        >
           <div>
-            <p class="donation-label">{{ item.emoji }} {{ item.label }}</p>
+            <p class="donation-label">{{ item.label }}</p>
             <p class="donation-price">${{ item.price }}</p>
           </div>
+
           <div class="d-flex justify-content-between align-items-center mt-3">
-            <button class="btn btn-outline-secondary" @click="updateQuantity(item.key, -1)">-</button>
+            <button class="btn btn-outline-secondary" @click="updateQuantity(item.key, -1)">
+              -
+            </button>
             <span class="qty">{{ kits[item.key] }}</span>
-            <button class="btn btn-outline-secondary" @click="updateQuantity(item.key, 1)">+</button>
+            <button class="btn btn-outline-secondary" @click="updateQuantity(item.key, 1)">
+              +
+            </button>
           </div>
         </div>
       </div>
@@ -28,7 +38,10 @@
 
     <div class="impact-box p-3 mb-4 bg-light rounded shadow-sm">
       <h2 class="impact-title">Your Impact</h2>
-      <p>Football Kits: {{ kits.football }}, Cricket Kits: {{ kits.cricket }}, Tennis Gear: {{ kits.tennis }}, General Packs: {{ kits.general }}</p>
+      <p>
+        Football Kits: {{ kits.football }}, Cricket Kits: {{ kits.cricket }}, Tennis Gear:
+        {{ kits.tennis }}, General Packs: {{ kits.general }}
+      </p>
       <p class="impact-custom">Custom Donation: ${{ customAmount || 0 }}</p>
     </div>
 
@@ -38,42 +51,75 @@
 
 <script>
 export default {
-  name: "Donation",
+  name: 'Donation',
+
   data() {
     return {
-      customAmount: "",
+      customAmount: '',
       kits: { football: 0, cricket: 0, tennis: 0, general: 0 },
       donationItems: [
-        { key: "football", label: "Football Kit", price: 50, emoji: "⚽" },
-        { key: "cricket", label: "Cricket Kit", price: 70, emoji: "🏏" },
-        { key: "tennis", label: "Tennis Gear", price: 40, emoji: "🎾" },
-        { key: "general", label: "General Sports Pack", price: 30, emoji: "🎽" },
+        { key: 'football', label: 'Football Kit', price: 50},
+        { key: 'cricket', label: 'Cricket Kit', price: 70 },
+        { key: 'tennis', label: 'Tennis Gear', price: 40 },
+        { key: 'general', label: 'General Sports Pack', price: 30 },
       ],
-    };
+    }
   },
+
   methods: {
     updateQuantity(key, change) {
-      this.kits[key] = Math.max(0, this.kits[key] + change);
+      this.kits[key] = Math.max(0, this.kits[key] + change)
     },
   },
-};
+}
 </script>
 
 <style scoped>
-.page-title { font-size: 2.5rem; font-weight: 700; }
-.page-subtitle { color: #555; font-size: 1.1rem; }
-.donation-card { border-radius: 0.75rem; transition: transform 0.2s; }
-.donation-card:hover { transform: translateY(-5px); }
-.donation-label { font-weight: 600; font-size: 1.1rem; }
-.donation-price { color: #666; font-weight: 500; }
-.qty { font-weight: 600; font-size: 1rem; }
-.impact-title { font-size: 1.5rem; margin-bottom: 0.5rem; }
-.impact-custom { color: green; font-weight: 600; }
-.custom-amount input { max-width: 300px; margin: 0 auto; }
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+.page-subtitle {
+  color: #555;
+  font-size: 1.1rem;
+}
+.donation-card {
+  border-radius: 0.75rem;
+  transition: transform 0.2s;
+}
+.donation-card:hover {
+  transform: translateY(-5px);
+}
+.donation-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.donation-price {
+  color: #666;
+  font-weight: 500;
+}
+.qty {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.impact-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.impact-custom {
+  color: green;
+  font-weight: 600;
+}
+.custom-amount input {
+  max-width: 300px;
+  margin: 0 auto;
+}
 .btn-primary {
   background-color: #0d6efd;
   border: none;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
 }
 .btn-primary:hover {
   background-color: #0b5ed7;
@@ -82,8 +128,6 @@ export default {
 
 .donation-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
-
-
 </style>
