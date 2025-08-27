@@ -3,37 +3,44 @@
     <h1 class="mb-4">Create New Sport Activity</h1>
 
     <form @submit.prevent="submitActivity">
-      <div class="mb-3">
-        <label class="form-label">Activity Name</label>
-        <input type="text" class="form-control" v-model="activity.title" required />
+
+      <div class="row">
+
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Activity Name</label>
+          <input type="text" class="form-control" v-model="activity.title" required />
+        </div>
+
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Date & Time</label>
+          <input type="datetime-local" class="form-control" v-model="activity.datetime" required />
+        </div>
+
       </div>
 
-      <div class="mb-3">
-        <label class="form-label">Date & Time</label>
-        <input type="datetime-local" class="form-control" v-model="activity.datetime" required />
-      </div>
+      <div class="row">
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Sport Type</label>
 
-      <div class="mb-3">
-        <label class="form-label">Sport Type</label>
+          <select class="form-select" v-model="activity.sport" required>
+            <option disabled value="">Select sport</option>
+            <option value="football">Football</option>
+            <option value="cricket">Cricket</option>
+            <option value="tennis">Tennis</option>
+            <option value="walking">Walking Group</option>
+          </select>
+        </div>
 
-        <select class="form-select" v-model="activity.sport" required>
-          <option disabled value="">Select sport</option>
-          <option value="football">Football</option>
-          <option value="cricket">Cricket</option>
-          <option value="tennis">Tennis</option>
-          <option value="walking">Walking Group</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Maximum Attendees</label>
-        <input
-          type="number"
-          class="form-control"
-          v-model.number="activity.capacity"
-          min="1"
-          required
-        />
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Maximum Attendees</label>
+          <input
+            type="number"
+            class="form-control"
+            v-model.number="activity.capacity"
+            min="1"
+            required
+          />
+        </div>
       </div>
 
       <div class="mb-3">
