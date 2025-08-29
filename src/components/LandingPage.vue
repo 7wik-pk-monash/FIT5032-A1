@@ -8,8 +8,11 @@
         Join us in creating opportunities for underrepresented communities to stay active and
         healthy.
       </p>
-      <router-link to="/donate" class="btn btn-primary btn-lg me-2">Donate Now</router-link>
-      <router-link to="/events" class="btn btn-outline-light btn-lg">View Events</router-link>
+      <div  id="hero-buttons">
+          <router-link to="/donate" class="btn btn-primary btn-lg">Donate Now</router-link>
+          <router-link to="/events" class="btn btn-outline-light btn-lg">View Events</router-link>
+      </div>
+
     </div>
   </section>
 </template>
@@ -37,4 +40,24 @@ export default {
   position: relative;
   z-index: 1;
 }
+
+#hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4rem;
+  justify-content: center;
+}
+
+@media (max-width: 576px) {
+  #hero-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  #hero-buttons .btn {
+    width: 10rem;
+  }
+}
+
 </style>
