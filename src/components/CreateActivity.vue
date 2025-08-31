@@ -13,7 +13,7 @@
 
         <div class="mb-3 col-md-6">
           <label class="form-label">Date & Time</label>
-          <input type="datetime-local" class="form-control" v-model="activity.datetime" required />
+          <input type="datetime-local" class="form-control" v-model="activity.datetime" required/>
         </div>
 
       </div>
@@ -22,13 +22,14 @@
         <div class="mb-3 col-md-6">
           <label class="form-label">Sport Type</label>
 
-          <select class="form-select" v-model="activity.sport" required>
+          <select class="form-select" v-model="activity.sport">
             <option disabled value="">Select sport</option>
             <option value="football">Football</option>
             <option value="cricket">Cricket</option>
             <option value="tennis">Tennis</option>
             <option value="walking">Walking Group</option>
           </select>
+          <small v-if="errors.sport" class="text-danger">{{ errors.sport }}</small>
         </div>
 
         <div class="mb-3 col-md-6">
@@ -38,8 +39,8 @@
             class="form-control"
             v-model.number="activity.capacity"
             min="1"
-            required
           />
+          <small v-if="errors.capacity" class="text-danger">{{ errors.capacity }}</small>
         </div>
       </div>
 
@@ -57,78 +58,201 @@
       <div class="mb-3">
         <label class="form-label">Or Set Location on Map</label>
         <div id="map" style="height: 300px"></div>
-        <p class="mt-2 text-muted">Drag the marker to adjust the location.</p>
+        <p class="mt-2 text-muted">Click anywhere on the map to set the location.</p>
+        <small v-if="errors.location" class="text-danger">{{ errors.location }}</small>
       </div>
 
       <button class="btn btn-primary btn-lg mt-3" type="submit">Create Activity</button>
     </form>
+
+    <div v-if="conflicts.length" class="alert alert-warning mt-4">
+      <h5>Conflict with existing activities:</h5>
+      <ul class="mb-0">
+        <li v-for="(c, index) in conflicts" :key="index">
+          <strong>{{ c.title }}</strong> ({{ c.sport }}) - {{ c.distance }}m away, {{ c.timeDiff }}min apart<br />
+          <small class="text-muted">Scheduled for {{ new Date(c.datetime).toLocaleString() }}</small>
+        </li>
+      </ul>
+      <p class="mt-2">You cannot create activities within 100m or within 30 minutes of existing activities. Please choose a different time or location.</p>
+    </div>
+
+
   </section>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { toast } from 'vue3-toastify'
+import { Toast } from 'bootstrap'
 
-export default {
-  name: 'CreateActivity',
-  data() {
-    return {
-      activity: {
-        title: '',
-        datetime: '',
-        sport: '',
-        capacity: 10,
-        location: { lat: -37.8136, lng: 144.9631 }, // Default Melbourne
-        rsvps: 0,
-      },
-      addressInput: '',
-      map: null,
-      marker: null,
-    }
-  },
-  mounted() {
-    this.map = L.map('map').setView([this.activity.location.lat, this.activity.location.lng], 13)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(this.map)
+// Reactive activity object
+const activity = ref({
+  title: '',
+  datetime: '',
+  sport: '',
+  capacity: 10,
+  location: { lat: -37.8136, lng: 144.9631 },
+  rsvps: 0,
+})
 
-    this.marker = L.marker([this.activity.location.lat, this.activity.location.lng], {
-      draggable: true,
-    }).addTo(this.map)
-    this.marker.on('dragend', (e) => {
-      const pos = e.target.getLatLng()
-      this.activity.location.lat = pos.lat
-      this.activity.location.lng = pos.lng
+const addressInput = ref('')
+
+// Leaflet map + marker references
+let map
+let marker
+
+// Initialize map
+onMounted(() => {
+  map = L.map('map').setView([activity.value.location.lat, activity.value.location.lng], 13)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(map)
+
+  marker = L.marker([activity.value.location.lat, activity.value.location.lng]).addTo(map)
+
+  // Place marker on map click
+  map.on('click', (e) => {
+    const { lat, lng } = e.latlng
+    activity.value.location = { lat, lng }
+    marker.setLatLng([lat, lng])
+  })
+})
+
+// Geocoding function
+function geocodeAddress() {
+  if (!addressInput.value) return
+
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput.value)}`
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.length > 0) {
+        const loc = data[0]
+        activity.value.location = { lat: +loc.lat, lng: +loc.lon }
+        map.setView([+loc.lat, +loc.lon], 15)
+        marker.setLatLng([+loc.lat, +loc.lon])
+      }
     })
-  },
-  methods: {
-    geocodeAddress() {
-      if (!this.addressInput) return
+}
 
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.addressInput)}`
+// form validation
+const errors = ref({
+  datetime: null,
+  sport: null,
+  capacity: null,
+  location: null,
+});
 
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.length > 0) {
-            const loc = data[0]
-            this.activity.location.lat = parseFloat(loc.lat)
-            this.activity.location.lng = parseFloat(loc.lon)
-            this.map.setView([loc.lat, loc.lon], 15)
-            this.marker.setLatLng([loc.lat, loc.lon])
-          }
-        })
-    },
+const conflicts = ref([])
 
-    submitActivity() {
-      // You can replace this with an API call or state management
-      const activities = JSON.parse(localStorage.getItem('activities') || '[]')
-      activities.push(this.activity)
-      localStorage.setItem('activities', JSON.stringify(activities))
-      alert('Activity created successfully!')
-      this.$router.push('/events')
-    },
-  },
+function checkForConflicts(newActivity) {
+  const existingActivities = JSON.parse(localStorage.getItem('activities') || '[]')
+  const conflicts = []
+
+  for (const existing of existingActivities) {
+    const timeDiff = Math.abs(new Date(existing.datetime) - new Date(newActivity.datetime))
+    const minutesDiff = timeDiff / (1000 * 60)
+
+    const distance = haversineDistance(
+      newActivity.location.lat,
+      newActivity.location.lng,
+      existing.location.lat,
+      existing.location.lng
+    )
+
+    if (minutesDiff <= 30 && distance <= 0.1) {
+      conflicts.push({
+        title: existing.title,
+        datetime: existing.datetime,
+        sport: existing.sport,
+        distance: Math.round(distance * 1000), // meters
+        timeDiff: Math.round(minutesDiff),
+      })
+    }
+  }
+
+  return conflicts
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371 // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c // in km
+};
+
+function validateActivity() {
+  errors.value = {}
+
+  if (!activity.value.datetime) {
+    errors.value.datetime = 'Please select a date & time.'
+  } else if (new Date(activity.value.datetime) < new Date()) {
+    errors.value.datetime = 'Date & time must be in the future.'
+  }
+
+  if (!activity.value.sport) {
+    errors.value.sport = 'Please select a sport type.'
+  }
+
+  if (!activity.value.capacity || activity.value.capacity < 1) {
+    errors.value.capacity = 'Capacity must be at least 1.'
+  }
+
+  if (!activity.value.location || !activity.value.location.lat || !activity.value.location.lng) {
+    errors.value.location = 'Please choose a location (map or address).'
+  }
+
+  return Object.keys(errors.value).length === 0
+};
+
+// Save activity to localStorage
+function submitActivity() {
+
+  if (!validateActivity()) {
+
+    toast.error('Please fix the errors in the form.', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+
+    return
+  }
+
+  const detected = checkForConflicts(activity.value)
+  if (detected.length > 0) {
+    conflicts.value = detected
+    return
+  }
+
+  // upon successful validation, save to localStorage
+  const activities = JSON.parse(localStorage.getItem('activities') || '[]')
+  activities.push(activity.value)
+  localStorage.setItem('activities', JSON.stringify(activities))
+  // alert('Activity created!')
+  toast.success('Activity created successfully!', {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
 }
 </script>
 
