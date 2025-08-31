@@ -5,9 +5,8 @@
 
     <!-- Filters Row -->
     <div class="row mb-3">
-      <div class="col-12 row g-3">
 
-        <div class="col-6 col-md-3" v-for="filter in filtersList" :key="filter.key">
+        <div class="col-6 col-md-6 col-lg-3 mb-3" v-for="filter in filtersList" :key="filter.key">
 
           <div v-if="filter.type === 'select'">
             <select v-model="filters[filter.key]" class="form-select">
@@ -33,7 +32,6 @@
 
         </div>
       </div>
-    </div>
 
     <!-- Buttons Row -->
     <div class="row mb-4">
