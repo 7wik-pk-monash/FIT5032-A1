@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "title": "Community Football Game #1",
+    "location": "Carlton Gardens",
+    "lat": -37.804,
+    "lng": 144.963,
+    "date": "24th Aug 2025",
+    "time": "4:00 PM",
+    "capacity": 20,
+    "rsvps": 8,
+    "sport": "football",
+    "age": "youth",
+    "accessibility": "open"
+  },
+  {
+    "id": 2,
+    "title": "Inclusive Cricket Match",
+    "location": "Fitzroy Oval",
+    "lat": -37.8,
+    "lng": 144.97,
+    "date": "28th Aug 2025",
+    "time": "10:00 AM",
+    "capacity": 15,
+    "rsvps": 12,
+    "sport": "cricket",
+    "age": "adults",
+    "accessibility": "inclusive"
+  },
+  {
+    "id": 3,
+    "title": "Tennis for All",
+    "location": "Brunswick Courts",
+    "lat": -37.789,
+    "lng": 144.95,
+    "date": "2nd Sep 2025",
+    "time": "6:00 PM",
+    "capacity": 10,
+    "rsvps": 5,
+    "sport": "tennis",
+    "age": "adults",
+    "accessibility": "open"
+  }
+]

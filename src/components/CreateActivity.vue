@@ -215,6 +215,12 @@ function validateActivity() {
   return Object.keys(errors.value).length === 0
 };
 
+function generateId() {
+  const existing = JSON.parse(localStorage.getItem('activities') || '[]')
+  const maxId = existing.reduce((max, a) => Math.max(max, a.id || 0), 0)
+  return maxId + 1
+}
+
 // Save activity to localStorage
 function submitActivity() {
 
@@ -237,11 +243,15 @@ function submitActivity() {
   if (detected.length > 0) {
     conflicts.value = detected
     return
+  } else {
+    conflicts.value = []
   }
 
   // upon successful validation, save to localStorage
   const activities = JSON.parse(localStorage.getItem('activities') || '[]')
+  activity.value.id = generateId()
   activities.push(activity.value)
+  localStorage.clear();
   localStorage.setItem('activities', JSON.stringify(activities))
   // alert('Activity created!')
   toast.success('Activity created successfully!', {

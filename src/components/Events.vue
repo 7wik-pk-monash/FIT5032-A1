@@ -81,6 +81,7 @@
 <script>
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import eventsData from '../assets/data/ex_events.json'
 
 export default {
   name: 'Events',
@@ -122,50 +123,7 @@ export default {
         },
         { key: 'distance', type: 'range', label: 'Distance from me (km)' },
       ],
-      programs: [
-        {
-          id: 1,
-          title: 'Community Football Game #1',
-          location: 'Carlton Gardens',
-          lat: -37.804,
-          lng: 144.963,
-          date: '24th Aug 2025',
-          time: '4:00 PM',
-          capacity: 20,
-          rsvps: 8,
-          sport: 'football',
-          age: 'youth',
-          accessibility: 'open',
-        },
-        {
-          id: 2,
-          title: 'Inclusive Cricket Match',
-          location: 'Fitzroy Oval',
-          lat: -37.8,
-          lng: 144.97,
-          date: '28th Aug 2025',
-          time: '10:00 AM',
-          capacity: 15,
-          rsvps: 12,
-          sport: 'cricket',
-          age: 'adults',
-          accessibility: 'inclusive',
-        },
-        {
-          id: 3,
-          title: 'Tennis for All',
-          location: 'Brunswick Courts',
-          lat: -37.789,
-          lng: 144.95,
-          date: '2nd Sep 2025',
-          time: '6:00 PM',
-          capacity: 10,
-          rsvps: 5,
-          sport: 'tennis',
-          age: 'adults',
-          accessibility: 'open',
-        },
-      ],
+      programs: [],
       filteredPrograms: [],
       map: null,
       markers: [],
@@ -173,11 +131,33 @@ export default {
       userLocation: { lat: -37.8136, lng: 144.9631 }, // Default Melbourne
     }
   },
+
   mounted() {
+
+    const localActivities = JSON.parse(localStorage.getItem('activities') || '[]')
+
+    // Normalize local activities if needed
+    const normalized = localActivities.map((a, i) => ({
+      id: a.id || 1000 + i, // fallback ID
+      title: a.title,
+      location: 'Custom Location',
+      lat: a.location?.lat,
+      lng: a.location?.lng,
+      date: new Date(a.datetime).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+      time: new Date(a.datetime).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' }),
+      capacity: a.capacity,
+      rsvps: a.rsvps || 0,
+      sport: a.sport,
+      age: 'adults', // default if not captured
+      accessibility: 'open', // default if not captured
+    }))
+
+    this.programs = [...eventsData, ...normalized]
     this.filteredPrograms = this.programs
     this.initMap()
     this.addMarkers(this.filteredPrograms)
   },
+
   methods: {
     initMap() {
       this.map = L.map('events-map').setView([this.userLocation.lat, this.userLocation.lng], 13)
