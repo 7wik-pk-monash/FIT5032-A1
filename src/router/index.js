@@ -5,6 +5,7 @@ import Events from '@/views/Events.vue'
 import CreateActivity from '@/views/CreateActivity.vue'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
+import Unauthorized from '@/views/Unauthorized.vue'
 
 const routes = [
 
@@ -15,6 +16,7 @@ const routes = [
   { path: '/create-activity', component: CreateActivity, meta: { requiresAuth: true } },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
+  { path: '/unauthorized', component: Unauthorized },
 
   // Admin Routes
   { path: '/admin', component: AdminPanel, meta: { requiresAuth: true, roles: ['admin'] } }
@@ -43,7 +45,9 @@ router.beforeEach((to, from, next) => {
 
     // If user attempts accessing an unauthorized page
     toast.error('You attempted to access an unauthorized page')
-    return next('/login')
+    setTimeout(() => next('/unauthorized'), 100)
+
+    // return next('/')
 
   } else {
     next()
