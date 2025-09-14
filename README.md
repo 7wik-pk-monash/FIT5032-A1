@@ -4,6 +4,12 @@ TeamUp is a community-focused platform that promotes health and well-being throu
 
 Built by Sathwik P. Kallapur (Monash University Clayton Campus, student ID 34556834)
 
+## Testing Business Requirements C.1-3
+To login as a normal user, register a new user with the appropriate credentials.
+To login as admin, provide the following credentials:
+email: admin@mailinator.com
+password: Admin123!
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
