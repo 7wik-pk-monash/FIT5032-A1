@@ -64,7 +64,14 @@
         >
           <div class="card-body d-flex flex-column">
             <h5 class="card-title">{{ program.title }}</h5>
-            <p class="card-text text-muted">Location: {{ program.location }}</p>
+
+            <p class="card-text text-muted">
+              Location: {{ program.location }}, Rating: ★ {{ program.playgroundRating || 'N/A' }}
+            </p>
+            <button class="btn btn-sm btn-outline-primary mt-2" @click="openRatingModal(program.location)">
+              Rate Playground
+            </button>
+
             <p class="card-text small text-muted">
               Date: {{ program.date }}, time: {{ program.time }}, Attendees: {{ program.rsvps }}/{{
                 program.capacity
@@ -75,6 +82,27 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showModal" class="modal-backdrop">
+      <div class="modal-content p-4 bg-white rounded shadow">
+        <h5 class="mb-3">Rate {{ modalPlayground }}</h5>
+        <div class="stars mb-2">
+          <span
+            v-for="n in 5"
+            :key="n"
+            class="star"
+            :class="{ selected: n <= selectedRating }"
+            @click="selectedRating = n"
+          >★</span>
+        </div>
+        <textarea v-model="ratingComment" class="form-control mb-3" placeholder="Leave a comment..." />
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-secondary" @click="closeModal">Cancel</button>
+          <button class="btn btn-primary" @click="submitRating">Submit</button>
+        </div>
+      </div>
+    </div>
+
   </section>
 </template>
 
@@ -82,6 +110,8 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import eventsData from '../assets/data/ex_events.json'
+import playgroundsData from '../assets/data/playgrounds.json'
+import { toast } from 'vue3-toastify'
 
 export default {
   name: 'Events',
@@ -129,18 +159,28 @@ export default {
       markers: [],
       selectedIndex: null,
       userLocation: { lat: -37.8136, lng: 144.9631 }, // Default Melbourne
+
+      showModal: false,
+      modalPlayground: '',
+      selectedRating: 0,
+      ratingComment: '',
     }
   },
 
   mounted() {
 
+    // seed localStorage with playgrounds
+    localStorage.removeItem('playgrounds')
+    localStorage.setItem('playgrounds', JSON.stringify(playgroundsData))
+
     const localActivities = JSON.parse(localStorage.getItem('activities') || '[]')
+    const playgrounds = JSON.parse(localStorage.getItem('playgrounds') || '[]')
 
     // Normalize local activities if needed
     const normalized = localActivities.map((a, i) => ({
       id: a.id || 1000 + i, // fallback ID
       title: a.title,
-      location: 'Custom Location',
+      location: a.location?.name || 'Custom Location',
       lat: a.location?.lat,
       lng: a.location?.lng,
       date: new Date(a.datetime).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -152,10 +192,26 @@ export default {
       accessibility: 'open', // default if not captured
     }))
 
-    this.programs = [...eventsData, ...normalized]
-    this.filteredPrograms = this.programs
+    const enriched = [...eventsData, ...normalized].map(program => {
+
+      const pg = playgrounds.find(p => p.name === program.location)
+
+      return {
+
+        ...program,
+
+        playgroundRating: pg?.reviews?.length
+        ? (pg.reviews.reduce((sum, r) => sum + r.score, 0) / pg.reviews.length).toFixed(1)
+        : null
+
+      }
+    })
+
+    this.programs = enriched
+    this.filteredPrograms = enriched
     this.initMap()
     this.addMarkers(this.filteredPrograms)
+
   },
 
   methods: {
@@ -220,6 +276,63 @@ export default {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
       return R * c
     },
+
+    openRatingModal(name) {
+      this.modalPlayground = name
+      this.selectedRating = 0
+      this.ratingComment = ''
+      this.showModal = true
+    },
+
+    closeModal() {
+      this.showModal = false
+    },
+
+    submitRating() {
+      const user = JSON.parse(localStorage.getItem('loggedInUser'))
+      if (!user) {
+        toast.error('You must be logged in to rate.', { autoClose: 3000 })
+        return
+      }
+
+      const playgrounds = JSON.parse(localStorage.getItem('playgrounds') || '[]')
+
+      console.log('Looking for:', this.modalPlayground)
+      console.log('playgrounds:', playgrounds)
+      console.log('Available playgrounds:', playgrounds.map(p => p.name))
+
+      const pg = playgrounds.find(p =>
+        p.name.trim().toLowerCase() === this.modalPlayground.trim().toLowerCase()
+      )
+
+      if (!pg) {
+        toast.error('Playground not found.', { autoClose: 3000 })
+      }
+
+      pg.reviews.push({
+        userEmail: user.email,
+        score: this.selectedRating,
+        comment: this.ratingComment,
+      })
+
+      localStorage.setItem('playgrounds', JSON.stringify(playgrounds))
+      this.closeModal()
+
+      // Recompute ratings
+      this.programs = this.programs.map(program => {
+        const updatedPg = playgrounds.find(p => p.name === program.location)
+        return {
+          ...program,
+          playgroundRating: updatedPg?.reviews?.length
+            ? (updatedPg.reviews.reduce((sum, r) => sum + r.score, 0) / updatedPg.reviews.length).toFixed(1)
+            : null
+        }
+      })
+
+      this.filteredPrograms = this.programs
+      toast.success("Thanks for your feedback!", { autoClose: 3000 })
+    }
+
   },
 }
 </script>
@@ -241,6 +354,29 @@ export default {
 .card-text {
   color: #555;
 }
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+.star {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #ccc;
+}
+.star.selected {
+  color: #ffc107;
+}
+
+
 .btn-primary {
   background-color: #0d6efd;
   border: none;
