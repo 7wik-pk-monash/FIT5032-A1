@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LandingPage from '@/components/LandingPage.vue'
-import Donation from '@/components/Donation.vue'
-import Events from '@/components/Events.vue'
-import CreateActivity from '@/components/CreateActivity.vue'
+import LandingPage from '@/views/LandingPage.vue'
+import Donation from '@/views/Donation.vue'
+import Events from '@/views/Events.vue'
+import CreateActivity from '@/views/CreateActivity.vue'
 
 const routes = [
   { path: '/', component: LandingPage },
