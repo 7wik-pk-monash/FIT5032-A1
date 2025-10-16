@@ -1,37 +1,78 @@
 import { ref, computed } from 'vue'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase/init.js'
 
 const user = ref(null)
 
-function login(userData) {
-  localStorage.setItem('loggedInUser', JSON.stringify(userData))
-  user.value = userData
+async function login(email, password) {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    const firebaseUser = userCredential.user
+    
+    // Get user data from Firestore
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
+    if (userDoc.exists()) {
+      user.value = userDoc.data()
+    } else {
+      throw new Error('User data not found')
+    }
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Login error:', error)
+    return { 
+      success: false, 
+      error: error.message || 'Login failed' 
+    }
+  }
 }
 
-function logout() {
-  localStorage.removeItem('loggedInUser')
-  user.value = null
+async function logout() {
+  try {
+    await signOut(auth)
+    user.value = null
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
 }
 
 function loadUser() {
-  const stored = localStorage.getItem('loggedInUser')
-  user.value = stored ? JSON.parse(stored) : null
+  // Set up auth state listener
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        // Get user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
+        if (userDoc.exists()) {
+          user.value = userDoc.data()
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+        user.value = null
+      }
+    } else {
+      user.value = null
+    }
+  })
 }
 
-function seedAdmin() {
-  const users = JSON.parse(localStorage.getItem('users') || '[]')
-  const exists = users.find(u => u.email === defaultAdmin.email)
-
-  // // debug: remove previously seeded admin account to seed changes
-  // if (exists)
-  // {
-  //   localStorage.setItem('users', JSON.stringify(users.filter(u => u.email !== defaultAdmin.email)))
-  //   users.push(defaultAdmin)
-  //   localStorage.setItem('users', JSON.stringify(users))
-  // }
-
-  if (!exists) {
-    users.push(defaultAdmin)
-    localStorage.setItem('users', JSON.stringify(users))
+async function seedAdmin() {
+  try {
+    // Check if admin user already exists in Firestore
+    const adminQuery = await getDoc(doc(db, 'users', 'admin'))
+    
+    if (!adminQuery.exists()) {
+      // Create admin user document in Firestore
+      await setDoc(doc(db, 'users', 'admin'), {
+        ...defaultAdmin,
+        uid: 'admin',
+        createdAt: new Date().toISOString()
+      })
+      console.log('Admin user seeded in Firestore')
+    }
+  } catch (error) {
+    console.error('Error seeding admin user:', error)
   }
 }
 

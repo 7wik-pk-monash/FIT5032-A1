@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.7",
+    "firebase": "^12.4.0",
     "leaflet": "^1.9.4",
     "vue": "^3.5.18",
     "vue-multiselect": "^3.3.1",

@@ -36,25 +36,26 @@ import { useAuth } from '@/composables/useAuth'
 const router = useRouter()
 const email = ref('')
 const password = ref('')
-const { login } = useAuth()
+const { login, user } = useAuth()
 
-function loginUser() {
-  const users = JSON.parse(localStorage.getItem('users') || '[]')
-  const user = users.find(u => u.email === email.value && u.password === password.value)
+async function loginUser() {
+  try {
+    const result = await login(email.value, password.value)
 
-  if (!user) {
-    toast.error('Invalid credentials.')
-    return
-  }
+    if (result.success) {
+      toast.success(`Welcome back, ${user.value?.firstName || 'User'}!`)
 
-  login(user)
-
-  toast.success(`Welcome back, ${user.firstName || 'User'}!`)
-
-  if (user.role === 'admin') {
-    router.push('/admin')
-  } else {
-    router.push('/')
+      if (user.value?.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
+    } else {
+      toast.error(result.error || 'Invalid credentials.')
+    }
+  } catch (error) {
+    console.error('Login error:', error)
+    toast.error('Login failed. Please try again.')
   }
 }
 </script>

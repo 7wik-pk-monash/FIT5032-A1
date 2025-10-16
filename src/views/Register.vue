@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <section class="container py-5">
     <h1 class="mb-4">Register</h1>
@@ -74,6 +75,9 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import Multiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase/init.js'
 
 const router = useRouter()
 const playgroundInput = ref('')
@@ -109,18 +113,44 @@ function removePlayground(index) {
   user.value.preferredPlaygrounds.splice(index, 1)
 }
 
-function registerUser() {
-  const users = JSON.parse(localStorage.getItem('users') || '[]')
-  const exists = users.find(u => u.email === user.value.email)
+async function registerUser() {
+  try {
+    // Create user with Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(auth, user.value.email, user.value.password)
+    const firebaseUser = userCredential.user
 
-  if (exists) {
-    toast.error('Email already registered.')
-    return
+    // Prepare user data for Firestore (exclude password)
+    const userData = {
+      uid: firebaseUser.uid,
+      firstName: user.value.firstName,
+      lastName: user.value.lastName,
+      email: user.value.email,
+      dob: user.value.dob,
+      bio: user.value.bio,
+      city: user.value.city,
+      preferredPlaygrounds: user.value.preferredPlaygrounds,
+      sportsInterest: user.value.sportsInterest,
+      role: 'user', // Default role for regular users
+      createdAt: new Date().toISOString()
+    }
+
+    // Save user data to Firestore
+    await setDoc(doc(db, 'users', firebaseUser.uid), userData)
+
+    toast.success('Registration successful!')
+    router.push('/login')
+  } catch (error) {
+    console.error('Registration error:', error)
+    
+    if (error.code === 'auth/email-already-in-use') {
+      toast.error('Email already registered.')
+    } else if (error.code === 'auth/weak-password') {
+      toast.error('Password should be at least 6 characters.')
+    } else if (error.code === 'auth/invalid-email') {
+      toast.error('Invalid email address.')
+    } else {
+      toast.error('Registration failed. Please try again.')
+    }
   }
-
-  users.push(user.value)
-  localStorage.setItem('users', JSON.stringify(users))
-  toast.success('Registration successful!')
-  router.push('/login')
 }
 </script>
