@@ -1,0 +1,38 @@
+[
+  {
+    "playgroundId": "1",
+    "playgroundName": "Carlton Gardens",
+    "userId": "jane123",
+    "userEmail": "jane@mailinator.com",
+    "score": 5,
+    "comment": "Great playground with excellent facilities!",
+    "createdAt": "2025-01-15T10:30:00.000Z"
+  },
+  {
+    "playgroundId": "1",
+    "playgroundName": "Carlton Gardens",
+    "userId": "bob456",
+    "userEmail": "bob@mailinator.com",
+    "score": 3,
+    "comment": "Needs more shade areas.",
+    "createdAt": "2025-01-16T14:20:00.000Z"
+  },
+  {
+    "playgroundId": "2",
+    "playgroundName": "Fitzroy Oval",
+    "userId": "jane123",
+    "userEmail": "jane@mailinator.com",
+    "score": 3,
+    "comment": "Decent facilities but could be better maintained.",
+    "createdAt": "2025-01-17T09:15:00.000Z"
+  },
+  {
+    "playgroundId": "3",
+    "playgroundName": "Brunswick Courts",
+    "userId": "bob456",
+    "userEmail": "bob@mailinator.com",
+    "score": 5,
+    "comment": "Excellent courts, well maintained!",
+    "createdAt": "2025-01-18T16:45:00.000Z"
+  }
+]

@@ -17,10 +17,27 @@
   </section>
 </template>
 
-<script>
-export default {
-  name: 'LandingPage',
-}
+<script setup>
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { toast } from 'vue3-toastify'
+
+const route = useRoute()
+
+onMounted(() => {
+  // Check for toast message in query parameters
+  if (route.query.toast && route.query.message) {
+    const message = route.query.message
+    if (route.query.toast === 'success') {
+      toast.success(message, { autoClose: 3000 })
+    } else if (route.query.toast === 'error') {
+      toast.error(message, { autoClose: 3000 })
+    }
+
+    // Clean up the URL by removing query parameters
+    window.history.replaceState({}, document.title, window.location.pathname)
+  }
+})
 </script>
 
 <style scoped>

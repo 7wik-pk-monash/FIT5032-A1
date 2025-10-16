@@ -3,28 +3,18 @@
     "id": 1,
     "name": "Carlton Gardens",
     "lat": -37.804,
-    "lng": 144.963,
-    "reviews": [
-        { "userEmail": "jane@mailinator.com", "score": 5, "comment": "Great!" },
-        { "userEmail": "bob@mailinator.com", "score": 3, "comment": "Needs shade." }
-    ]
+    "lng": 144.963
   },
   {
     "id": 2,
     "name": "Fitzroy Oval",
     "lat": -37.8,
-    "lng": 144.97,
-    "reviews": [
-        { "userEmail": "jane@mailinator.com", "score": 3, "comment": "Needs shade." }
-    ]
+    "lng": 144.97
   },
   {
     "id": 3,
     "name": "Brunswick Courts",
     "lat": -37.789,
-    "lng": 144.95,
-    "reviews": [
-        { "userEmail": "bob@mailinator.com", "score": 5, "comment": "Not bad." }
-    ]
+    "lng": 144.95
   }
 ]

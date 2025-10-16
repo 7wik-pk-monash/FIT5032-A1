@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <section class="container py-5">
     <h1 class="mb-4">Login</h1>
@@ -43,19 +44,24 @@ async function loginUser() {
     const result = await login(email.value, password.value)
 
     if (result.success) {
-      toast.success(`Welcome back, ${user.value?.firstName || 'User'}!`)
-
+      // Navigate immediately and show toast on the next page
       if (user.value?.role === 'admin') {
-        router.push('/admin')
+        router.push({
+          path: '/admin',
+          query: { toast: 'success', message: `Welcome back, ${user.value?.firstName || 'User'}!` }
+        })
       } else {
-        router.push('/')
+        router.push({
+          path: '/',
+          query: { toast: 'success', message: `Welcome back, ${user.value?.firstName || 'User'}!` }
+        })
       }
     } else {
-      toast.error(result.error || 'Invalid credentials.')
+      toast.error(result.error || 'Invalid credentials.', { autoClose: 3000 })
     }
   } catch (error) {
     console.error('Login error:', error)
-    toast.error('Login failed. Please try again.')
+    toast.error('Login failed. Please try again.', { autoClose: 3000 })
   }
 }
 </script>

@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
 
   <section class="container donation-container py-5">
@@ -49,28 +50,21 @@
   </section>
 </template>
 
-<script>
-export default {
-  name: 'Donation',
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup>
+import { ref } from 'vue'
 
-  data() {
-    return {
-      customAmount: '',
-      kits: { football: 0, cricket: 0, tennis: 0, general: 0 },
-      donationItems: [
-        { key: 'football', label: 'Football Kit', price: 50},
-        { key: 'cricket', label: 'Cricket Kit', price: 70 },
-        { key: 'tennis', label: 'Tennis Gear', price: 40 },
-        { key: 'general', label: 'General Sports Pack', price: 30 },
-      ],
-    }
-  },
+const customAmount = ref('')
+const kits = ref({ football: 0, cricket: 0, tennis: 0, general: 0 })
+const donationItems = ref([
+  { key: 'football', label: 'Football Kit', price: 50},
+  { key: 'cricket', label: 'Cricket Kit', price: 70 },
+  { key: 'tennis', label: 'Tennis Gear', price: 40 },
+  { key: 'general', label: 'General Sports Pack', price: 30 },
+])
 
-  methods: {
-    updateQuantity(key, change) {
-      this.kits[key] = Math.max(0, this.kits[key] + change)
-    },
-  },
+const updateQuantity = (key, change) => {
+  kits.value[key] = Math.max(0, kits.value[key] + change)
 }
 </script>
 

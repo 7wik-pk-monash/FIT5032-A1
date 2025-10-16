@@ -1,29 +1,43 @@
 import { ref, computed } from 'vue'
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 import { auth, db } from '../firebase/init.js'
+
+const functions = getFunctions()
+const seedAdminFunction = httpsCallable(functions, 'seedAdmin', { region: 'us-central1' })
 
 const user = ref(null)
 
 async function login(email, password) {
   try {
+    // First ensure admin user exists if trying to login as admin
+    if (email === 'admin@mailinator.com') {
+      await seedAdmin()
+    }
+
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
     const firebaseUser = userCredential.user
-    
+
     // Get user data from Firestore
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
     if (userDoc.exists()) {
-      user.value = userDoc.data()
+      const userData = userDoc.data()
+      // Check if user is deleted
+      if (userData.deleted) {
+        throw new Error('Account has been deleted')
+      }
+      user.value = userData
     } else {
       throw new Error('User data not found')
     }
-    
+
     return { success: true }
   } catch (error) {
     console.error('Login error:', error)
-    return { 
-      success: false, 
-      error: error.message || 'Login failed' 
+    return {
+      success: false,
+      error: error.message || 'Login failed'
     }
   }
 }
@@ -45,7 +59,14 @@ function loadUser() {
         // Get user data from Firestore
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
         if (userDoc.exists()) {
-          user.value = userDoc.data()
+          const userData = userDoc.data()
+          // Check if user is deleted
+          if (userData.deleted) {
+            user.value = null
+            await signOut(auth) // Sign out deleted user
+          } else {
+            user.value = userData
+          }
         }
       } catch (error) {
         console.error('Error loading user data:', error)
@@ -59,39 +80,29 @@ function loadUser() {
 
 async function seedAdmin() {
   try {
-    // Check if admin user already exists in Firestore
-    const adminQuery = await getDoc(doc(db, 'users', 'admin'))
-    
-    if (!adminQuery.exists()) {
-      // Create admin user document in Firestore
-      await setDoc(doc(db, 'users', 'admin'), {
-        ...defaultAdmin,
-        uid: 'admin',
-        createdAt: new Date().toISOString()
-      })
-      console.log('Admin user seeded in Firestore')
-    }
+    // Call Cloud Function to create admin user in both Auth and Firestore
+    const result = await seedAdminFunction()
+    console.log(result.data.message)
   } catch (error) {
     console.error('Error seeding admin user:', error)
   }
 }
 
-const defaultAdmin = {
-  firstName: 'Admin',
-  lastName: 'User',
-  email: 'admin@mailinator.com',
-  password: 'Admin123!',
-  role: 'admin',
-  city: 'Melbourne',
-  bio: 'Platform administrator',
-  preferredPlaygrounds: [],
-  sportsInterest: [],
-}
+// const defaultAdmin = {
+//   firstName: 'Admin',
+//   lastName: 'User',
+//   email: 'admin@mailinator.com',
+//   password: 'Admin123!',
+//   role: 'admin',
+//   city: 'Melbourne',
+//   bio: 'Platform administrator',
+//   preferredPlaygrounds: [],
+//   sportsInterest: [],
+// }
 
 const isAdmin = computed(() => user.value?.role === 'admin')
 
 export function useAuth() {
-  seedAdmin()
   loadUser()
   return { user, login, logout, loadUser, isAdmin }
 }

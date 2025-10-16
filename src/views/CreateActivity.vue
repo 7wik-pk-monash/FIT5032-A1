@@ -85,7 +85,11 @@ import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { toast } from 'vue3-toastify'
-import { Toast } from 'bootstrap'
+import { useData } from '../composables/useData.js'
+import { useRouter } from 'vue-router'
+
+const { activities, addActivity } = useData()
+const router = useRouter()
 
 // Reactive activity object
 const activity = ref({
@@ -149,10 +153,9 @@ const errors = ref({
 const conflicts = ref([])
 
 function checkForConflicts(newActivity) {
-  const existingActivities = JSON.parse(localStorage.getItem('activities') || '[]')
   const conflicts = []
 
-  for (const existing of existingActivities) {
+  for (const existing of activities.value) {
     const timeDiff = Math.abs(new Date(existing.datetime) - new Date(newActivity.datetime))
     const minutesDiff = timeDiff / (1000 * 60)
 
@@ -215,17 +218,9 @@ function validateActivity() {
   return Object.keys(errors.value).length === 0
 };
 
-function generateId() {
-  const existing = JSON.parse(localStorage.getItem('activities') || '[]')
-  const maxId = existing.reduce((max, a) => Math.max(max, a.id || 0), 0)
-  return maxId + 1
-}
-
-// Save activity to localStorage
-function submitActivity() {
-
+// Save activity to Firestore
+async function submitActivity() {
   if (!validateActivity()) {
-
     toast.error('Please fix the errors in the form.', {
       position: "top-right",
       autoClose: 3000,
@@ -235,7 +230,6 @@ function submitActivity() {
       draggable: true,
       progress: undefined,
     });
-
     return
   }
 
@@ -247,22 +241,34 @@ function submitActivity() {
     conflicts.value = []
   }
 
-  // upon successful validation, save to localStorage
-  const activities = JSON.parse(localStorage.getItem('activities') || '[]')
-  activity.value.id = generateId()
-  activities.push(activity.value)
-  localStorage.clear();
-  localStorage.setItem('activities', JSON.stringify(activities))
-  // alert('Activity created!')
-  toast.success('Activity created successfully!', {
-    position: "top-right",
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-  });
+  try {
+    // Save to Firestore
+    await addActivity(activity.value)
+
+    toast.success('Activity created successfully!', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+
+    // Redirect to events page
+    router.push('/events')
+  } catch (error) {
+    console.error('Error creating activity:', error)
+    toast.error('Failed to create activity. Please try again.', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  }
 }
 </script>
 

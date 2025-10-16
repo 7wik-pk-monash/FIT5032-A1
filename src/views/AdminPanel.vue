@@ -21,7 +21,7 @@
           <td>{{ u.role || 'user' }}</td>
           <td>{{ u.city }}</td>
           <td>
-            <button class="btn btn-sm btn-danger" @click="deleteUser(u.email)">Delete</button>
+            <button class="btn btn-sm btn-danger" @click="deleteUser(u.uid)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -41,15 +41,32 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { toast } from 'vue3-toastify'
+import { collection, getDocs } from 'firebase/firestore'
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import { db } from '../firebase/init.js'
+import { useData } from '../composables/useData.js'
+
+const functions = getFunctions()
+const deleteUserFunction = httpsCallable(functions, 'deleteUser', { region: 'us-central1' })
+
+const route = useRoute()
+const { activities, loadActivities } = useData()
 
 // User management
 const users = ref([])
 
-function deleteUser(email) {
-  users.value = users.value.filter(u => u.email !== email)
-  localStorage.setItem('users', JSON.stringify(users.value))
-  toast.success(`Deleted user ${email}`)
+async function deleteUser(userId) {
+  console.log('deleteUser called with userId:', userId)
+  try {
+    await deleteUserFunction({ userId })
+    users.value = users.value.filter(u => u.uid !== userId)
+    toast.success('User deleted successfully')
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    toast.error('Failed to delete user: ' + error.message)
+  }
 }
 
 // Activity stats
@@ -61,14 +78,13 @@ const stats = ref({
 })
 
 function computeStats() {
-  const activities = JSON.parse(localStorage.getItem('activities') || '[]')
-  stats.value.total = activities.length
-  stats.value.totalRsvps = activities.reduce((sum, a) => sum + (a.rsvps || 0), 0)
+  stats.value.total = activities.value.length
+  stats.value.totalRsvps = activities.value.reduce((sum, a) => sum + (a.rsvps || 0), 0)
 
   const sportCount = {}
   const playgroundCount = {}
 
-  activities.forEach(a => {
+  activities.value.forEach(a => {
     sportCount[a.sport] = (sportCount[a.sport] || 0) + 1
 
     if (a.location?.name) {
@@ -81,8 +97,37 @@ function computeStats() {
 }
 
 // Load data on mount
-onMounted(() => {
-  users.value = JSON.parse(localStorage.getItem('users') || '[]')
+onMounted(async () => {
+  try {
+    // Load activities from Firestore
+    await loadActivities()
+
+    // Fetch users from Firestore (exclude deleted users)
+    const usersSnapshot = await getDocs(collection(db, 'users'))
+    users.value = usersSnapshot.docs
+      .filter(doc => !doc.data().deleted) // Filter out deleted users
+      .map(doc => ({
+        uid: doc.id,
+        ...doc.data()
+      }))
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    toast.error('Failed to load data')
+  }
+
   computeStats()
+
+  // Check for toast message in query parameters
+  if (route.query.toast && route.query.message) {
+    const message = route.query.message
+    if (route.query.toast === 'success') {
+      toast.success(message, { autoClose: 3000 })
+    } else if (route.query.toast === 'error') {
+      toast.error(message, { autoClose: 3000 })
+    }
+
+    // Clean up the URL by removing query parameters
+    window.history.replaceState({}, document.title, window.location.pathname)
+  }
 })
 </script>
