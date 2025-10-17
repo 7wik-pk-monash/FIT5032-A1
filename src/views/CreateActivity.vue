@@ -362,19 +362,27 @@ const errors = ref({
 const conflicts = ref([])
 
 // Helper function to find coordinates for an activity location
-function findCoordinatesForActivity(locationString) {
-  if (!locationString || !playgrounds.value.length) return null
-
-  // Try to match location with playground names
-  const matchingPlayground = playgrounds.value.find(playground => {
-    // Check if location contains the playground name (case-insensitive)
-    return locationString.toLowerCase().includes(playground.name.toLowerCase())
-  })
-
-  if (matchingPlayground) {
+function findCoordinatesForActivity(locationData) {
+  // If locationData is an object with lat/lng, use those coordinates directly
+  if (locationData && typeof locationData === 'object' && locationData.lat && locationData.lng) {
     return {
-      lat: matchingPlayground.lat,
-      lng: matchingPlayground.lng
+      lat: locationData.lat,
+      lng: locationData.lng
+    }
+  }
+
+  // If locationData is a string, try to match with playground names
+  if (typeof locationData === 'string' && playgrounds.value.length > 0) {
+    const matchingPlayground = playgrounds.value.find(playground => {
+      // Check if location contains the playground name (case-insensitive)
+      return locationData.toLowerCase().includes(playground.name.toLowerCase())
+    })
+
+    if (matchingPlayground) {
+      return {
+        lat: matchingPlayground.lat,
+        lng: matchingPlayground.lng
+      }
     }
   }
 
@@ -384,10 +392,25 @@ function findCoordinatesForActivity(locationString) {
 // TODO: move to cloud function
 function checkForConflicts(newActivity) {
   const conflicts = []
-  const newCoordinates = findCoordinatesForActivity(newActivity.location.address)
+  const newCoordinates = findCoordinatesForActivity(newActivity.location)
 
   for (const existing of activities.value) {
-    const timeDiff = Math.abs(new Date(existing.datetime) - new Date(newActivity.datetime))
+    // Skip activities that don't have date/time fields
+    if (!existing.date || !existing.time) {
+      continue
+    }
+
+    // Convert existing activity's separate date/time to datetime string
+    const existingDateTime = `${existing.date}T${existing.time}`
+    const existingDate = new Date(existingDateTime)
+    const newDate = new Date(newActivity.datetime)
+
+    // Skip if either date is invalid
+    if (isNaN(existingDate.getTime()) || isNaN(newDate.getTime())) {
+      continue
+    }
+
+    const timeDiff = Math.abs(newDate - existingDate)
     const minutesDiff = timeDiff / (1000 * 60)
 
     // Only check distance if we have coordinates for both activities
@@ -405,7 +428,7 @@ function checkForConflicts(newActivity) {
         if (minutesDiff <= 30 && distance <= 0.1) {
           conflicts.push({
             title: existing.title,
-            datetime: existing.datetime,
+            datetime: existingDateTime,
             sport: existing.sport,
             distance: Math.round(distance * 1000), // meters
             timeDiff: Math.round(minutesDiff),
@@ -415,7 +438,7 @@ function checkForConflicts(newActivity) {
         // If we can't get coordinates for existing activity, just check time
         conflicts.push({
           title: existing.title,
-          datetime: existing.datetime,
+          datetime: existingDateTime,
           sport: existing.sport,
           distance: 'N/A',
           timeDiff: Math.round(minutesDiff),
@@ -425,7 +448,7 @@ function checkForConflicts(newActivity) {
       // If we can't get coordinates for new activity, just check time
       conflicts.push({
         title: existing.title,
-        datetime: existing.datetime,
+        datetime: existingDateTime,
         sport: existing.sport,
         distance: 'N/A',
         timeDiff: Math.round(minutesDiff),

@@ -87,8 +87,9 @@ function computeStats() {
   activities.value.forEach(a => {
     sportCount[a.sport] = (sportCount[a.sport] || 0) + 1
 
-    if (a.location?.name) {
-      playgroundCount[a.location.name] = (playgroundCount[a.location.name] || 0) + 1
+    // Count activities by location (address string)
+    if (a.location && typeof a.location === 'string') {
+      playgroundCount[a.location] = (playgroundCount[a.location] || 0) + 1
     }
   })
 
