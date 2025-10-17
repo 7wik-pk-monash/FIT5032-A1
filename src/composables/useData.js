@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, setDoc, query, where } from 'firebase/firestore'
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where } from 'firebase/firestore'
 import { db } from '../firebase/init.js'
 import exEventsData from '../assets/data/ex_events.json'
 import playgroundsData from '../assets/data/playgrounds.json'
@@ -113,9 +113,57 @@ async function loadPlaygrounds() {
   }
 }
 
+// Ensure playground exists (create if it doesn't)
+async function ensurePlaygroundExists(playgroundName, coordinates = null) {
+  try {
+    // Check if playground already exists
+    const existingPlayground = playgrounds.value.find(p =>
+      p.name.trim().toLowerCase() === playgroundName.trim().toLowerCase()
+    )
+
+    if (!existingPlayground) {
+      console.log(`Creating new playground: ${playgroundName}`)
+
+      // Create a new playground document in Firestore
+      const newPlaygroundRef = await addDoc(collection(db, 'playgrounds'), {
+        name: playgroundName.trim(),
+        lat: coordinates?.lat || null,
+        lng: coordinates?.lng || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+
+      // Add to local playgrounds array
+      const newPlayground = {
+        id: newPlaygroundRef.id,
+        name: playgroundName.trim(),
+        lat: coordinates?.lat || null,
+        lng: coordinates?.lng || null,
+        reviews: [],
+        averageRating: null,
+        reviewCount: 0
+      }
+
+      playgrounds.value.push(newPlayground)
+      return newPlayground
+    }
+
+    return existingPlayground
+  } catch (error) {
+    console.error('Error ensuring playground exists:', error)
+    throw error
+  }
+}
+
 // Add new activity
 async function addActivity(activityData) {
   try {
+    // Ensure playground exists for the activity location
+    await ensurePlaygroundExists(activityData.location, {
+      lat: activityData.lat,
+      lng: activityData.lng
+    })
+
     const docRef = await addDoc(collection(db, 'activities'), {
       ...activityData,
       createdAt: new Date().toISOString(),
@@ -150,6 +198,23 @@ async function deleteActivity(activityId) {
     await loadActivities() // Reload activities
   } catch (error) {
     console.error('Error deleting activity:', error)
+    throw error
+  }
+}
+
+// Get activity by ID
+async function getActivityById(activityId) {
+  try {
+    const activityDoc = await getDoc(doc(db, 'activities', activityId))
+    if (activityDoc.exists()) {
+      return {
+        id: activityDoc.id,
+        ...activityDoc.data()
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('Error getting activity:', error)
     throw error
   }
 }
@@ -232,7 +297,9 @@ export function useData() {
     addActivity,
     updateActivity,
     deleteActivity,
+    getActivityById,
     addPlaygroundReview,
+    ensurePlaygroundExists,
     getActivitiesBySport,
     getActivitiesByLocation
   }

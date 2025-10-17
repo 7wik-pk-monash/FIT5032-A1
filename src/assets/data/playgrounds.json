@@ -1,20 +1,20 @@
 [
   {
     "id": 1,
-    "name": "Carlton Gardens",
-    "lat": -37.804,
-    "lng": 144.963
+    "name": "Carlton Gardens, Carlton St, Carlton",
+    "lat": -37.805442618848176,
+    "lng": 144.97137684649525
   },
   {
     "id": 2,
-    "name": "Fitzroy Oval",
-    "lat": -37.8,
-    "lng": 144.97
+    "name": "WT Peterson Oval, Brunswick St, Fitzroy",
+    "lat": -37.78901304581446,
+    "lng": 144.98125371269705
   },
   {
     "id": 3,
-    "name": "Brunswick Courts",
-    "lat": -37.789,
-    "lng": 144.95
+    "name": "West Brunswick Tennis Club, Victoria St, Brunswick",
+    "lat": -37.764904996982494,
+    "lng": 144.9511384349876
   }
 ]

@@ -2,9 +2,7 @@
   {
     "id": 1,
     "title": "Community Football Game #1",
-    "location": "Carlton Gardens",
-    "lat": -37.804,
-    "lng": 144.963,
+    "location": "Carlton Gardens, Carlton St, Carlton",
     "date": "24th Aug 2025",
     "time": "4:00 PM",
     "capacity": 20,
@@ -16,9 +14,7 @@
   {
     "id": 2,
     "title": "Inclusive Cricket Match",
-    "location": "Fitzroy Oval",
-    "lat": -37.8,
-    "lng": 144.97,
+    "location": "WT Peterson Oval, Brunswick St, Fitzroy",
     "date": "28th Aug 2025",
     "time": "10:00 AM",
     "capacity": 15,
@@ -30,9 +26,7 @@
   {
     "id": 3,
     "title": "Tennis for All",
-    "location": "Brunswick Courts",
-    "lat": -37.789,
-    "lng": 144.95,
+    "location": "West Brunswick Tennis Club, Victoria St, Brunswick",
     "date": "2nd Sep 2025",
     "time": "6:00 PM",
     "capacity": 10,

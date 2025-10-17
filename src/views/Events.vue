@@ -92,6 +92,22 @@
                   Rate Playground
                 </button>
               </div>
+
+              <!-- Edit/Delete buttons for activity creator -->
+              <div v-if="user && program.createdBy === user.uid" class="mt-2">
+                <button
+                  class="btn btn-sm btn-outline-primary me-2"
+                  @click.stop="editActivity(program)"
+                >
+                  Edit Activity
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  @click.stop="deleteActivity(program.id)"
+                >
+                  Delete Activity
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -143,21 +159,54 @@
     </div>
 
     <!-- Modal Backdrop -->
-    <div v-if="showModal" class="modal-backdrop show"></div>
+    <div v-if="showModal" class="modal-backdrop show">    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-danger">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              Delete Activity
+            </h5>
+            <button type="button" class="btn-close" @click="cancelDelete"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-3">Are you sure you want to delete this activity?</p>
+            <div class="alert alert-warning" role="alert">
+              <i class="bi bi-exclamation-circle me-2"></i>
+              <strong>Warning:</strong> This action cannot be undone. All data associated with this activity will be permanently removed.
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" @click="cancelDelete">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete">
+              <i class="bi bi-trash me-1"></i>
+              Delete Activity
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </section>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { toast } from 'vue3-toastify'
 import { useData } from '../composables/useData.js'
 import { useAuth } from '../composables/useAuth.js'
 
-const { activities, playgrounds, loadActivities, loadPlaygrounds, addPlaygroundReview } = useData()
+const { activities, playgrounds, loadActivities, loadPlaygrounds, addPlaygroundReview, deleteActivity: deleteActivityFromDB } = useData()
 const { user } = useAuth()
+const router = useRouter()
 
 // Reactive data
 const filters = ref({ sport: '', age: '', accessibility: '', distance: 10 })
@@ -208,6 +257,30 @@ const modalPlayground = ref('')
 const selectedRating = ref(0)
 const ratingComment = ref('')
 
+// Delete confirmation modal
+const showDeleteModal = ref(false)
+const activityToDelete = ref(null)
+
+// Helper function to find coordinates for an event location
+const findCoordinatesForEvent = (eventLocation) => {
+  if (!eventLocation || !playgrounds.value.length) return null
+
+  // Try to match event location with playground names
+  const matchingPlayground = playgrounds.value.find(playground => {
+    // Check if event location contains the playground name (case-insensitive)
+    return eventLocation.toLowerCase().includes(playground.name.toLowerCase())
+  })
+
+  if (matchingPlayground) {
+    return {
+      lat: matchingPlayground.lat,
+      lng: matchingPlayground.lng
+    }
+  }
+
+  return null
+}
+
 // Methods
 const initMap = () => {
   map.value = L.map('events-map').setView([userLocation.value.lat, userLocation.value.lng], 13)
@@ -222,22 +295,31 @@ const addMarkers = (events) => {
   markers.value = []
 
   events.forEach((event, index) => {
-    const marker = L.marker([event.lat, event.lng])
-      .bindPopup(`
-        <div>
-          <h6>${event.title}</h6>
-          <p>${event.location}</p>
-          <p>${event.date} at ${event.time}</p>
-          <p>${event.rsvps}/${event.capacity} participants</p>
-        </div>
-      `)
-      .on('click', () => {
-        selectedIndex.value = index
-        map.value.setView([event.lat, event.lng], 15)
-      })
-      .addTo(map.value)
+    // Try to find coordinates by matching event location with playground names
+    const coordinates = findCoordinatesForEvent(event.location)
 
-    markers.value.push(marker)
+    if (coordinates) {
+      const marker = L.marker([coordinates.lat, coordinates.lng])
+        .bindPopup(`
+          <div>
+            <h6>${event.title}</h6>
+            <p>${event.location}</p>
+            <p>${event.date} at ${event.time}</p>
+            <p>${event.rsvps}/${event.capacity} participants</p>
+          </div>
+        `)
+        .on('click', () => {
+          selectedIndex.value = index
+          map.value.setView([coordinates.lat, coordinates.lng], 15)
+          // Open popup after map animation completes
+          setTimeout(() => {
+            marker.openPopup()
+          }, 300) // Wait for zoom animation to complete
+        })
+        .addTo(map.value)
+
+      markers.value.push(marker)
+    }
   })
 }
 
@@ -245,8 +327,22 @@ const selectCard = (index, fromMarker = false) => {
   selectedIndex.value = index
   if (!fromMarker) {
     const event = filteredPrograms.value[index]
-    map.value.setView([event.lat, event.lng], 15)
-    markers.value[index].openPopup()
+    const coordinates = findCoordinatesForEvent(event.location)
+
+    if (coordinates) {
+      map.value.setView([coordinates.lat, coordinates.lng], 15)
+      // Find and open the corresponding marker popup after map animation
+      setTimeout(() => {
+        const correspondingMarker = markers.value.find(marker => {
+          const markerLatLng = marker.getLatLng()
+          return Math.abs(markerLatLng.lat - coordinates.lat) < 0.001 &&
+                 Math.abs(markerLatLng.lng - coordinates.lng) < 0.001
+        })
+        if (correspondingMarker) {
+          correspondingMarker.openPopup()
+        }
+      }, 300) // Wait for zoom animation to complete
+    }
   } else {
     const cardList = document.querySelectorAll('.card')
     cardList[index].scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -295,14 +391,18 @@ const searchEvents = () => {
 
 const hasUserRated = (playgroundName) => {
   if (!user.value) return false
-  const playground = playgrounds.value.find(p => p.name === playgroundName)
+  const playground = playgrounds.value.find(p =>
+    p.name.trim().toLowerCase() === playgroundName.trim().toLowerCase()
+  )
   if (!playground) return false
   return playground.reviews.some(review => review.userId === user.value.uid)
 }
 
 const getUserRating = (playgroundName) => {
   if (!user.value) return null
-  const playground = playgrounds.value.find(p => p.name === playgroundName)
+  const playground = playgrounds.value.find(p =>
+    p.name.trim().toLowerCase() === playgroundName.trim().toLowerCase()
+  )
   if (!playground) return null
   return playground.reviews.find(review => review.userId === user.value.uid)
 }
@@ -360,7 +460,9 @@ const submitRating = async () => {
 
     // Recompute ratings
     programs.value = programs.value.map(program => {
-      const updatedPg = playgrounds.value.find(p => p.name === program.location)
+      const updatedPg = playgrounds.value.find(p =>
+        p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
+      )
       return {
         ...program,
         averageRating: updatedPg?.averageRating || null,
@@ -373,7 +475,64 @@ const submitRating = async () => {
   }
 
   filteredPrograms.value = programs.value
-  // toast.success("Thanks for your feedback!", { autoClose: 3000 })
+}
+
+// Delete activity - show confirmation modal
+const deleteActivity = (activityId) => {
+  activityToDelete.value = activityId
+  showDeleteModal.value = true
+}
+
+// Cancel delete
+const cancelDelete = () => {
+  showDeleteModal.value = false
+  activityToDelete.value = null
+}
+
+// Confirm delete
+const confirmDelete = async () => {
+  if (!activityToDelete.value) return
+
+  try {
+    await deleteActivityFromDB(activityToDelete.value)
+    toast.success('Activity deleted successfully!', { autoClose: 3000 })
+
+    // Reload data to reflect changes
+    await loadActivities()
+
+    // Update programs with fresh data
+    const enriched = activities.value.map(program => {
+      const pg = playgrounds.value.find(p =>
+        p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
+      )
+      return {
+        ...program,
+        averageRating: pg?.averageRating || null,
+        reviewCount: pg?.reviewCount || 0
+      }
+    })
+
+    programs.value = enriched
+    filteredPrograms.value = enriched
+    addMarkers(filteredPrograms.value)
+
+    // Close modal
+    showDeleteModal.value = false
+    activityToDelete.value = null
+
+  } catch (error) {
+    console.error('Error deleting activity:', error)
+    toast.error('Failed to delete activity', { autoClose: 3000 })
+  }
+}
+
+// Edit activity
+const editActivity = (activity) => {
+  // Navigate to edit page with activity data
+  router.push({
+    path: '/create-activity',
+    query: { edit: activity.id }
+  })
 }
 
 // Lifecycle
@@ -384,7 +543,9 @@ onMounted(async () => {
 
   // Process activities data
   const enriched = activities.value.map(program => {
-    const pg = playgrounds.value.find(p => p.name === program.location)
+    const pg = playgrounds.value.find(p =>
+      p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
+    )
 
     return {
       ...program,
