@@ -1,1 +1,33 @@
-- donation page (with stripe logic?)
+
+CAT D
+
+- add social login (google) LP
+
+- donation page (with stripe logic?) - would allow emailing the receipt - create receipt format for this
+
+- tabular data - admin dashboard already has one, try adding sort, search (by each column) & limit w pagination
+  - also add admin table for deleted users
+  - add table for users to see activities they themselves created - with edit/delete buttons
+  - past activities? (would complicate things a bit)
+
+- deploy on vercel
+
+CAT E
+
+- think of more cloud funcs - triggering emails?
+
+- geolocation LP - in maps, show users how far away each activity is from them by driving or public transport (or if haversine distance is under some limit, show walking also). Also show autocomplete suggestions on the text box if possible
+
+CAT F
+
+- admin dashboard already DONE
+
+- bulk emails : allow users to subscribe to mailing lists - whenever an activity is scheduled on a ground (or) for any combination of filters/parameters like sport(s), age group, accessibility options, time period, etc. By default, have everything be exhaustively selected i.e., have all sports be selected, have time period be "any time" and allow the user to restrict and fine tune these as per their preferences. handle mailing using firestore's onCreate triggers
+
+- charts - show bar chart of number of activities per sport in the next 2 weeks, also per accessibility type, maybe per suburb too
+
+- appointment booking with calendar - when users join events, add that to their personal calendar (if they have one integrated) and check for schedule conflicts
+
+GENERAL
+
+- make everything use data directly from firestore wherever possible instead of storing everything as reactive variables in useData()
