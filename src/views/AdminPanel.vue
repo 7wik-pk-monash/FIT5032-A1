@@ -52,7 +52,6 @@
             :paginator="false"
             :sortField="sortField"
             :sortOrder="sortOrder"
-            :globalFilterFields="['firstName', 'lastName', 'email', 'city', 'role']"
             :loading="loading"
             class="admin-datatable"
             stripedRows
@@ -61,13 +60,49 @@
             <template #header>
               <div class="datatable-header">
                 <div class="search-container">
-                  <div class="search-input-wrapper">
-                    <i class="pi pi-search search-icon"></i>
-                    <input
-                      v-model="filters['global'].value"
-                      placeholder="Search users by name, email, city, or role..."
-                      class="search-input"
-                    />
+                  <div class="search-controls">
+                    <div class="search-column">
+                      <label for="searchColumn" class="search-label">Search in:</label>
+                      <select
+                        id="searchColumn"
+                        v-model="searchColumn"
+                        class="search-select"
+                      >
+                        <option value="all">All Fields</option>
+                        <option value="name">Name</option>
+                        <option value="email">Email</option>
+                        <option value="city">City</option>
+                      </select>
+                    </div>
+
+                    <div class="search-input-wrapper">
+                      <i class="pi pi-search search-icon"></i>
+                      <input
+                        v-model="searchQuery"
+                        @keyup.enter="performSearch"
+                        placeholder="Enter search term..."
+                        class="search-input"
+                      />
+                    </div>
+
+                    <button
+                      @click="performSearch"
+                      class="search-button"
+                      type="button"
+                    >
+                      <i class="pi pi-search"></i>
+                      Search
+                    </button>
+
+                    <button
+                      @click="clearSearch"
+                      class="clear-button"
+                      type="button"
+                      v-if="searchQuery"
+                    >
+                      <i class="pi pi-times"></i>
+                      Clear
+                    </button>
                   </div>
                 </div>
               </div>
@@ -297,10 +332,12 @@ const loading = ref(false)
 const currentPage = ref(1)
 const rowsPerPage = ref(5)
 
-// DataTable filters and sorting
-const filters = ref({
-  global: { value: null, matchMode: 'contains' }
-})
+// Search functionality
+const searchQuery = ref('')
+const searchColumn = ref('all')
+const filteredUsers = ref([])
+
+// DataTable sorting
 const sortField = ref('firstName')
 const sortOrder = ref(1)
 
@@ -350,20 +387,20 @@ function computeStats() {
 }
 
 // Custom pagination computed properties (safe fallbacks)
-const totalUsers = computed(() => users.value?.length || 0)
+const totalUsers = computed(() => filteredUsers.value?.length || 0)
 const totalPages = computed(() => Math.ceil(totalUsers.value / Number(rowsPerPage.value)) || 1)
 const startRecord = computed(() => Math.min((currentPage.value - 1) * Number(rowsPerPage.value) + 1, totalUsers.value) || 0)
 const endRecord = computed(() => Math.min(currentPage.value * Number(rowsPerPage.value), totalUsers.value) || 0)
 
 // Paginated users for the DataTable
 const paginatedUsers = computed(() => {
-  if (!users.value || users.value.length === 0) return []
+  if (!filteredUsers.value || filteredUsers.value.length === 0) return []
 
   const rowsPerPageNum = Number(rowsPerPage.value)
   const start = (currentPage.value - 1) * rowsPerPageNum
   const end = start + rowsPerPageNum
 
-  return users.value.slice(start, end)
+  return filteredUsers.value.slice(start, end)
 })
 
 const visiblePages = computed(() => {
@@ -413,6 +450,48 @@ function onRowsPerPageChange() {
   currentPage.value = 1
 }
 
+// Search functions
+function performSearch() {
+  if (!searchQuery.value.trim()) {
+    filteredUsers.value = [...users.value]
+    currentPage.value = 1
+    return
+  }
+
+  const query = searchQuery.value.toLowerCase().trim()
+  const column = searchColumn.value
+
+  filteredUsers.value = users.value.filter(user => {
+    if (column === 'all') {
+      return (
+        user.firstName?.toLowerCase().includes(query) ||
+        user.lastName?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query) ||
+        user.city?.toLowerCase().includes(query)
+      )
+    } else if (column === 'name') {
+      return (
+        user.firstName?.toLowerCase().includes(query) ||
+        user.lastName?.toLowerCase().includes(query)
+      )
+    } else if (column === 'email') {
+      return user.email?.toLowerCase().includes(query)
+    } else if (column === 'city') {
+      return user.city?.toLowerCase().includes(query)
+    }
+    return false
+  })
+
+  currentPage.value = 1 // Reset to first page when searching
+}
+
+function clearSearch() {
+  searchQuery.value = ''
+  searchColumn.value = 'all'
+  filteredUsers.value = [...users.value]
+  currentPage.value = 1
+}
+
 // Watch for changes in total pages and adjust current page if needed
 watch(totalPages, (newTotalPages) => {
   if (currentPage.value > newTotalPages && newTotalPages > 0) {
@@ -435,6 +514,9 @@ onMounted(async () => {
         uid: doc.id,
         ...doc.data()
       }))
+
+    // Initialize filtered users with all users
+    filteredUsers.value = [...users.value]
   } catch (error) {
     console.error('Error fetching data:', error)
     toast.error('Failed to load data')
@@ -559,13 +641,57 @@ onMounted(async () => {
 }
 
 .search-container {
-  max-width: 400px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 800px;
+}
+
+.search-column {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.search-select {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 0.375rem;
+  background: white;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.search-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .search-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  min-width: 200px;
+  max-width: 300px;
 }
 
 .search-icon {
@@ -581,7 +707,7 @@ onMounted(async () => {
   border: 2px solid #e9ecef;
   border-radius: 25px;
   font-size: 0.95rem;
-  color: #495057; /* Set the font color here */
+  color: #495057;
   transition: all 0.3s ease;
   background: white;
 }
@@ -590,6 +716,54 @@ onMounted(async () => {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.search-button:active {
+  transform: translateY(0);
+}
+
+.clear-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-button:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.clear-button:active {
+  transform: translateY(0);
 }
 
 /* Table Cell Styles */
@@ -831,6 +1005,27 @@ onMounted(async () => {
 
   .stat-label {
     font-size: 0.75rem;
+  }
+
+  .search-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .search-column {
+    justify-content: center;
+  }
+
+  .search-input-wrapper {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .search-button,
+  .clear-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .user-info {
