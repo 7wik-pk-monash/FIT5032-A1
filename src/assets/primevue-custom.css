@@ -1,0 +1,273 @@
+/* Custom styles to integrate PrimeVue with Bootstrap */
+
+/* DataTable customizations */
+.p-datatable .p-datatable-header {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  padding: 1rem;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: #e9ecef;
+  color: #495057;
+  font-weight: 600;
+  border-color: #dee2e6;
+  padding: 0.75rem;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: #dee2e6;
+  padding: 0.75rem;
+}
+
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #e3f2fd;
+}
+
+.p-datatable {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+/* Button customizations */
+.p-button.p-button-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.p-button.p-button-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.p-button.p-button-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Search input styling */
+.p-inputtext {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.p-inputtext:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Paginator styling */
+.p-paginator {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-top: none;
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.p-paginator .p-paginator-current {
+  font-size: 0.95rem;
+  color: #495057;
+  font-weight: 600;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.p-paginator .p-paginator-pages {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 1rem;
+}
+
+.p-paginator .p-paginator-page {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 40px;
+  text-align: center;
+}
+
+.p-paginator .p-paginator-page:hover {
+  background: #e3f2fd;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.p-paginator .p-paginator-page.p-highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-last {
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin: 0 0.25rem;
+}
+
+.p-paginator .p-paginator-first:hover,
+.p-paginator .p-paginator-prev:hover,
+.p-paginator .p-paginator-next:hover,
+.p-paginator .p-paginator-last:hover {
+  background: #e3f2fd;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.p-paginator .p-paginator-rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 25px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.p-paginator .p-paginator-rows-per-page:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.p-paginator .p-paginator-rows-per-page::before {
+  content: "Users per page:";
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.p-paginator .p-paginator-rows-per-page select {
+  border: 2px solid #e9ecef;
+  background: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+  text-align: center;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+.p-paginator .p-paginator-rows-per-page select:focus {
+  outline: none;
+  border-color: #667eea;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.p-paginator .p-paginator-rows-per-page select:hover {
+  border-color: #667eea;
+  background-color: white;
+}
+
+/* Responsive paginator */
+@media (max-width: 768px) {
+  .p-paginator {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .p-paginator .p-paginator-current {
+    margin: 0;
+    order: 1;
+  }
+
+  .p-paginator .p-paginator-pages {
+    order: 2;
+    margin: 0;
+  }
+
+  .p-paginator .p-paginator-rows-per-page {
+    order: 3;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .p-paginator .p-paginator-rows-per-page::before {
+    font-size: 0.85rem;
+  }
+
+  .p-paginator .p-paginator-rows-per-page select {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+    min-width: 50px;
+  }
+}
+
+/* Tooltip styling */
+.p-tooltip .p-tooltip-text {
+  background: #212529;
+  color: #fff;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Loading spinner */
+.p-datatable .p-datatable-loading-overlay {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .p-button.p-button-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
