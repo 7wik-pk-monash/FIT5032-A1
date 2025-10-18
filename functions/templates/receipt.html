@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #0d6efd; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #0d6efd; }
+        .receipt-title { font-size: 28px; margin: 20px 0; }
+        .receipt-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .items-table th { background-color: #0d6efd; color: white; }
+        .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
+        .footer { text-align: center; margin-top: 40px; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">TeamUp</div>
+        <h1 class="receipt-title">Donation Receipt</h1>
+    </div>
+    
+    <div class="receipt-info">
+        <p><strong>Receipt Number:</strong> {{receiptNumber}}</p>
+        <p><strong>Date:</strong> {{date}}</p>
+        <p><strong>Donor:</strong> {{donorName}}</p>
+        <p><strong>Email:</strong> {{donorEmail}}</p>
+    </div>
+    
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{items}}
+        </tbody>
+    </table>
+    
+    <div class="total">
+        <p><strong>Total Donation: ${{totalAmount}} AUD</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>Thank you for your generous donation to TeamUp!</p>
+        <p>Your contribution helps us provide sports equipment to underrepresented communities.</p>
+        <p>This receipt can be used for tax deduction purposes.</p>
+    </div>
+</body>
+</html>

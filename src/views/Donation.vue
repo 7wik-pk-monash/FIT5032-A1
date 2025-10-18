@@ -46,13 +46,20 @@
       <p class="impact-custom">Custom Donation: ${{ customAmount || 0 }}</p>
     </div>
 
-    <button class="btn btn-primary w-100 btn-lg">Proceed to Payment</button>
+    <button class="btn btn-primary w-100 btn-lg" @click="processDonation">Proceed to Payment (Mock Payment)</button>
   </section>
 </template>
 
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import { useAuth } from '../composables/useAuth.js'
+
+const router = useRouter()
+const { user } = useAuth()
 
 const customAmount = ref('')
 const kits = ref({ football: 0, cricket: 0, tennis: 0, general: 0 })
@@ -65,6 +72,79 @@ const donationItems = ref([
 
 const updateQuantity = (key, change) => {
   kits.value[key] = Math.max(0, kits.value[key] + change)
+}
+
+async function processDonation() {
+  // Check if user is logged in
+  if (!user.value) {
+    toast.error('Please login to make a donation')
+    router.push('/login')
+    return
+  }
+
+  // Calculate total amount
+  let totalAmount = 0
+  const items = []
+
+  // Calculate kit totals
+  donationItems.value.forEach(item => {
+    if (kits.value[item.key] > 0) {
+      const itemTotal = kits.value[item.key] * item.price
+      totalAmount += itemTotal
+      items.push({
+        name: item.label,
+        quantity: kits.value[item.key],
+        unitPrice: item.price,
+        total: itemTotal
+      })
+    }
+  })
+
+  // Add custom amount
+  if (customAmount.value && parseFloat(customAmount.value) > 0) {
+    totalAmount += parseFloat(customAmount.value)
+    items.push({
+      name: 'Custom Donation',
+      quantity: 1,
+      unitPrice: parseFloat(customAmount.value),
+      total: parseFloat(customAmount.value)
+    })
+  }
+
+  if (totalAmount === 0) {
+    toast.error('Please select items or enter a custom amount')
+    return
+  }
+
+  try {
+    // Generate receipt data
+    const donationData = {
+      receiptNumber: `TUP-${Date.now()}`,
+      date: new Date().toLocaleDateString('en-AU'),
+      donorName: `${user.value.firstName} ${user.value.lastName}`,
+      donorEmail: user.value.email,
+      totalAmount: totalAmount.toFixed(2),
+      items: items
+    }
+
+    // Send receipt email
+    const functions = getFunctions()
+    const sendDonationReceiptFunction = httpsCallable(functions, 'sendDonationReceipt')
+
+    await sendDonationReceiptFunction({ donationData })
+
+    // Show success toast
+    toast.success(`Thank you for your donation of $${totalAmount.toFixed(2)} AUD! A receipt has been sent to ${user.value.email}`, {
+      autoClose: 5000
+    })
+
+    // TODO: Change redirection later - currently redirecting to home page
+    router.push('/')
+
+  } catch (error) {
+    console.error('Donation processing error:', error)
+    toast.error('There was an error processing your donation. Please try again.')
+  }
 }
 </script>
 

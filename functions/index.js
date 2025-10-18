@@ -218,5 +218,124 @@ export const sendWelcomeEmail = onCall(async (data) => {
       <p>Get started by exploring our events and activities!</p>
     `,
   };
-  return await sendEmail(userEmail, mailOptions);
+  return await sendEmail(mailOptions);
+});
+
+// receipt generation - create PDF using jsPDF
+import { jsPDF } from 'jspdf';
+import { Buffer } from 'buffer';
+
+async function generateReceiptPDF(donationData) {
+  const doc = new jsPDF();
+
+  // Set font
+  doc.setFont('helvetica');
+
+  // Header
+  doc.setFontSize(24);
+  doc.setTextColor(13, 110, 253); // Bootstrap primary blue
+  doc.text('TeamUp', 105, 20, { align: 'center' });
+
+  doc.setFontSize(18);
+  doc.setTextColor(0, 0, 0);
+  doc.text('DONATION RECEIPT', 105, 30, { align: 'center' });
+
+  // Receipt details
+  doc.setFontSize(12);
+  doc.text('Receipt Number:', 20, 50);
+  doc.text(donationData.receiptNumber, 60, 50);
+
+  doc.text('Date:', 20, 60);
+  doc.text(donationData.date, 60, 60);
+
+  doc.text('Donor:', 20, 70);
+  doc.text(donationData.donorName, 60, 70);
+
+  doc.text('Email:', 20, 80);
+  doc.text(donationData.donorEmail, 60, 80);
+
+  // Items table header
+  doc.setFontSize(14);
+  doc.text('ITEMS DONATED', 20, 100);
+
+  // Table
+  let yPosition = 115;
+  doc.setFontSize(10);
+
+  // Table headers
+  doc.text('Item', 20, yPosition);
+  doc.text('Qty', 120, yPosition);
+  doc.text('Unit Price', 140, yPosition);
+  doc.text('Total', 170, yPosition);
+
+  yPosition += 5;
+  doc.line(20, yPosition, 190, yPosition);
+  yPosition += 10;
+
+  // Items
+  doc.setFontSize(9);
+  donationData.items.forEach(item => {
+    doc.text(item.name, 20, yPosition);
+    doc.text(item.quantity.toString(), 120, yPosition);
+    doc.text(`$${item.unitPrice}`, 140, yPosition);
+    doc.text(`$${item.total}`, 170, yPosition);
+    yPosition += 8;
+  });
+
+  // Total
+  yPosition += 10;
+  doc.setFontSize(12);
+  doc.text(`TOTAL DONATION: $${donationData.totalAmount} AUD`, 20, yPosition);
+
+  // Footer
+  yPosition += 30;
+  doc.setFontSize(10);
+  doc.text('Thank you for your generous donation to TeamUp!', 20, yPosition);
+  yPosition += 8;
+  doc.text('Your contribution helps us provide sports equipment to', 20, yPosition);
+  yPosition += 8;
+  doc.text('underrepresented communities.', 20, yPosition);
+  yPosition += 12;
+  doc.text('This receipt can be used for tax deduction purposes.', 20, yPosition);
+
+  // Generate PDF buffer
+  const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+  return pdfBuffer;
+}
+
+// Cloud Function for donation receipt
+export const sendDonationReceipt = onCall(async (data) => {
+  const { donationData } = data.data;
+
+  try {
+    // Generate PDF
+    const pdfBuffer = await generateReceiptPDF(donationData);
+
+    // Create email with PDF attachment
+    const transporter = createTransporter();
+    const mailOptions = {
+      from: gmailUser.value(),
+      to: donationData.donorEmail,
+      subject: 'Thank you for your donation - Receipt attached',
+      html: `
+        <h2>Thank you for your donation!</h2>
+        <p>Dear ${donationData.donorName},</p>
+        <p>Thank you for your generous donation of $${donationData.totalAmount} AUD to TeamUp.</p>
+        <p>Your contribution will help us provide sports equipment to underrepresented communities.</p>
+        <p>Please find your receipt attached to this email.</p>
+        <p>Best regards,<br>TeamUp Team</p>
+      `,
+      attachments: [{
+        filename: `receipt-${donationData.receiptNumber}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }]
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending donation receipt:', error);
+    return { success: false, error: error.message };
+  }
 });
