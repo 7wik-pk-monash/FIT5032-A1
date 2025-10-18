@@ -4,9 +4,9 @@ CAT D
 
 - add social login (google) LP
 
-- donation page (with stripe logic?) - would allow emailing the receipt - DONE
+- donation page (with stripe logic?) - would allow emailing the receipt - DONE ✅
 
-- tabular data - admin dashboard already has one, try adding sort, search (by each column) & limit w pagination
+- tabular data DONE ✅ - admin dashboard already has one, try adding sort, search (by each column) & limit w pagination
   - also add admin table for deleted users
   - add table for users to see activities they themselves created - with edit/delete buttons
   - past activities? (would complicate things a bit)
@@ -15,13 +15,13 @@ CAT D
 
 CAT E
 
-- think of more cloud funcs - triggering emails? - DONE (could extend)
+- think of more cloud funcs - triggering emails? - DONE ✅ (could extend)
 
 - geolocation LP - in maps, show users how far away each activity is from them by driving or public transport (or if haversine distance is under some limit, show walking also). Also show autocomplete suggestions on the text box if possible
 
 CAT F
 
-- admin dashboard already DONE
+- admin dashboard already DONE ✅
 
 - bulk emails : allow users to subscribe to mailing lists - whenever an activity is scheduled on a ground (or) for any combination of filters/parameters like sport(s), age group, accessibility options, time period, etc. By default, have everything be exhaustively selected i.e., have all sports be selected, have time period be "any time" and allow the user to restrict and fine tune these as per their preferences. handle mailing using firestore's onCreate triggers
 

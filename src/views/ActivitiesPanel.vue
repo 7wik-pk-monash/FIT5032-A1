@@ -155,9 +155,16 @@
             </DataTableColumn>
 
             <DataTableColumn header="Actions" :exportable="false" style="min-width:8rem">
-              <template #body>
+              <template #body="slotProps">
                 <div class="action-buttons">
-                  <!-- Actions will be added here in the future -->
+                  <PrimeButton
+                    @click="confirmDeleteActivity(slotProps.data)"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    size="small"
+                    outlined
+                    v-tooltip.top="'Delete Activity'"
+                  />
                 </div>
               </template>
             </DataTableColumn>
@@ -297,6 +304,41 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-danger">
+              <i class="pi pi-exclamation-triangle me-2"></i>
+              Delete Activity
+            </h5>
+            <button type="button" class="btn-close" @click="cancelDelete"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-3">Are you sure you want to delete this activity?</p>
+            <div v-if="activityToDelete" class="alert alert-warning" role="alert">
+              <i class="pi pi-exclamation-circle me-2"></i>
+              <strong>Activity:</strong> {{ activityToDelete.title }}
+            </div>
+            <div class="alert alert-danger" role="alert">
+              <i class="pi pi-exclamation-circle me-2"></i>
+              <strong>Warning:</strong> This action cannot be undone. All data associated with this activity will be permanently removed.
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" @click="cancelDelete">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete" :disabled="loading">
+              <i class="pi pi-trash me-1"></i>
+              {{ loading ? 'Deleting...' : 'Delete Activity' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -307,7 +349,7 @@ import { toast } from 'vue3-toastify'
 import { useData } from '../composables/useData.js'
 
 const route = useRoute()
-const { activities, loadActivities } = useData()
+const { activities, loadActivities, deleteActivity } = useData()
 
 // Loading state
 const loading = ref(false)
@@ -332,6 +374,10 @@ const stats = ref({
   topSport: '',
   topPlayground: '',
 })
+
+// Delete confirmation modal
+const showDeleteModal = ref(false)
+const activityToDelete = ref(null)
 
 function computeStats() {
   stats.value.total = activities.value.length
@@ -496,6 +542,46 @@ function formatTime(datetime) {
 function getRsvpCount(activity) {
   const rsvps = activity.rsvps || []
   return Array.isArray(rsvps) ? rsvps.length : 0
+}
+
+// Delete activity function - show confirmation modal
+function confirmDeleteActivity(activity) {
+  activityToDelete.value = activity
+  showDeleteModal.value = true
+}
+
+// Cancel delete
+function cancelDelete() {
+  showDeleteModal.value = false
+  activityToDelete.value = null
+}
+
+// Confirm delete
+async function confirmDelete() {
+  if (!activityToDelete.value) return
+
+  try {
+    loading.value = true
+    await deleteActivity(activityToDelete.value.id)
+    toast.success('Activity deleted successfully')
+
+    // Update filtered activities if needed
+    if (filteredActivities.value.length > 0) {
+      filteredActivities.value = filteredActivities.value.filter(a => a.id !== activityToDelete.value.id)
+    }
+
+    // Adjust current page if needed
+    if (currentPage.value > totalPages.value && totalPages.value > 0) {
+      currentPage.value = totalPages.value
+    }
+  } catch (error) {
+    console.error('Error deleting activity:', error)
+    toast.error('Failed to delete activity')
+  } finally {
+    loading.value = false
+    showDeleteModal.value = false
+    activityToDelete.value = null
+  }
 }
 
 
@@ -860,6 +946,17 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.delete-btn {
+  background: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+}
+
+.delete-btn:hover {
+  background: #c82333 !important;
+  border-color: #bd2130 !important;
 }
 
 /* Statistics Cards */
