@@ -322,6 +322,22 @@ const formatDateTime = (datetime) => {
   }
 }
 
+// Helper function to filter only future events
+const filterFutureEvents = (events) => {
+  const now = new Date()
+  return events.filter(event => {
+    if (!event.datetime) return false
+
+    try {
+      const eventDate = new Date(event.datetime)
+      return eventDate > now
+    } catch (error) {
+      console.error('Error parsing datetime:', error)
+      return false
+    }
+  })
+}
+
 // Methods
 const initMap = () => {
   map.value = L.map('events-map').setView([userLocation.value.lat, userLocation.value.lng], 13)
@@ -392,6 +408,9 @@ const selectCard = (index, fromMarker = false) => {
 
 const searchEvents = () => {
   let filtered = [...programs.value]
+
+  // First filter to ensure we only show future events
+  filtered = filterFutureEvents(filtered)
 
   if (filters.value.sport) {
     filtered = filtered.filter(p => p.sport === filters.value.sport)
@@ -668,7 +687,7 @@ onMounted(async () => {
   await loadActivities()
   await loadPlaygrounds()
 
-  // Process activities data
+  // Process activities data and filter only future events
   const enriched = activities.value.map(program => {
     const pg = playgrounds.value.find(p =>
       p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
@@ -681,8 +700,11 @@ onMounted(async () => {
     }
   })
 
-  programs.value = enriched
-  filteredPrograms.value = enriched
+  // Filter to show only future events
+  const futureEvents = filterFutureEvents(enriched)
+
+  programs.value = futureEvents
+  filteredPrograms.value = futureEvents
   initMap()
   addMarkers(filteredPrograms.value)
 })
