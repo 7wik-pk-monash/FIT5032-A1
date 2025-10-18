@@ -383,30 +383,41 @@ const searchEvents = () => {
     filtered = filtered.filter(p => p.accessibility === filters.value.accessibility)
   }
 
-  // Distance filter (simplified - would need geolocation for real implementation)
+  // Distance filter based on actual coordinates
   if (filters.value.distance < 50) {
-    // For demo purposes, just filter by some criteria
-    filtered = filtered.filter(p => p.location.includes('Carlton') || p.location.includes('Fitzroy') || p.location.includes('Brunswick'))
+    filtered = filtered.filter(p => {
+      const coordinates = findCoordinatesForEvent(p.location)
+      if (!coordinates) return false // Exclude if no coordinates found
+
+      const distance = getDistance(
+        userLocation.value.lat,
+        userLocation.value.lng,
+        coordinates.lat,
+        coordinates.lng
+      )
+
+      return distance <= filters.value.distance
+    })
   }
 
   filteredPrograms.value = filtered
   addMarkers(filteredPrograms.value)
 }
 
-// Distance calculation function (currently unused but kept for future use)
-// const getDistance = (lat1, lon1, lat2, lon2) => {
-//   const R = 6371 // km
-//   const dLat = ((lat2 - lat1) * Math.PI) / 180
-//   const dLon = ((lon2 - lon1) * Math.PI) / 180
-//   const a =
-//     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-//     Math.cos((lat1 * Math.PI) / 180) *
-//       Math.cos((lat2 * Math.PI) / 180) *
-//       Math.sin(dLon / 2) *
-//       Math.sin(dLon / 2)
-//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-//   return R * c
-// }
+// Distance calculation using Haversine formula
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371 // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
 
 const hasUserRated = (playgroundName) => {
   if (!user.value) return false
