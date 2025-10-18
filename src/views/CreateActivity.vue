@@ -306,7 +306,7 @@ async function loadActivityForEdit(activityId) {
 
       // Pre-fill form with existing data
       activity.value.title = activityData.title
-      activity.value.datetime = `${activityData.date}T${activityData.time}`
+      activity.value.datetime = activityData.datetime
       activity.value.sport = activityData.sport
       activity.value.capacity = activityData.capacity
       activity.value.location = {
@@ -735,13 +735,13 @@ function checkForConflicts(newActivity) {
   const newCoordinates = findCoordinatesForActivity(newActivity.location)
 
   for (const existing of activities.value) {
-    // Skip activities that don't have date/time fields
-    if (!existing.date || !existing.time) {
+    // Skip activities that don't have datetime field
+    if (!existing.datetime) {
       continue
     }
 
-    // Convert existing activity's separate date/time to datetime string
-    const existingDateTime = `${existing.date}T${existing.time}`
+    // Use existing datetime directly
+    const existingDateTime = existing.datetime
     const existingDate = new Date(existingDateTime)
     const newDate = new Date(newActivity.datetime)
 
@@ -874,8 +874,7 @@ async function submitActivity() {
 
     const activityData = {
       title: activity.value.title,
-      date: activity.value.datetime.split('T')[0],
-      time: activity.value.datetime.split('T')[1],
+      datetime: activity.value.datetime,
       sport: activity.value.sport,
       capacity: activity.value.capacity,
       location: activity.value.location.address,

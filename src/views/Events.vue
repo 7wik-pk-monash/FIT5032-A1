@@ -65,7 +65,7 @@
               <h5 class="card-title">{{ program.title }}</h5>
               <p class="card-text">
                 <strong>Location:</strong> {{ program.location }}<br />
-                <strong>Date:</strong> {{ program.date }} at {{ program.time }}<br />
+                <strong>Date & Time:</strong> {{ formatDateTime(program.datetime) }}<br />
                 <strong>Sport:</strong> {{ program.sport }}<br />
                 <strong>Participants:</strong> {{ (program.rsvps || []).length }}/{{ program.capacity }}<br />
                 <strong>Age Group:</strong> {{ program.age }}<br />
@@ -300,6 +300,28 @@ const findCoordinatesForEvent = (eventLocation) => {
   return null
 }
 
+// Helper function to format datetime for display
+const formatDateTime = (datetime) => {
+  if (!datetime) return 'TBD'
+
+  try {
+    const date = new Date(datetime)
+    const options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }
+    return date.toLocaleDateString('en-AU', options)
+  } catch (error) {
+    console.error('Error formatting datetime:', error)
+    return datetime // Return original if formatting fails
+  }
+}
+
 // Methods
 const initMap = () => {
   map.value = L.map('events-map').setView([userLocation.value.lat, userLocation.value.lng], 13)
@@ -323,7 +345,7 @@ const addMarkers = (events) => {
           <div>
             <h6>${event.title}</h6>
             <p>${event.location}</p>
-            <p>${event.date} at ${event.time}</p>
+            <p>${formatDateTime(event.datetime)}</p>
             <p>${(event.rsvps || []).length}/${event.capacity} participants</p>
           </div>
         `)
