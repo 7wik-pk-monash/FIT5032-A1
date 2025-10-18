@@ -4,8 +4,7 @@ CAT D
 
 - add social login (google) LP
 
-- donation page (with stripe logic?) - would allow emailing the receipt - create receipt format for this
-- Emailing done but NO ATTACHMENT (yet)
+- donation page (with stripe logic?) - would allow emailing the receipt - DONE
 
 - tabular data - admin dashboard already has one, try adding sort, search (by each column) & limit w pagination
   - also add admin table for deleted users

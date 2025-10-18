@@ -25,8 +25,23 @@ import { toast } from 'vue3-toastify'
 const route = useRoute()
 
 onMounted(() => {
-  // Check for toast message in query parameters
-  if (route.query.toast && route.query.message) {
+  // Check for donation success message
+  if (route.query.donationSuccess) {
+    const message = decodeURIComponent(route.query.donationSuccess)
+
+    // Add a small delay to ensure the page is fully loaded
+    setTimeout(() => {
+      toast.success(message, {
+        autoClose: 5000,
+        position: 'top-right'
+      })
+    }, 100)
+
+    // Clean up the URL by removing query parameters
+    window.history.replaceState({}, document.title, window.location.pathname)
+  }
+  // Check for other toast messages in query parameters
+  else if (route.query.toast && route.query.message) {
     const message = route.query.message
     if (route.query.toast === 'success') {
       toast.success(message, { autoClose: 3000 })

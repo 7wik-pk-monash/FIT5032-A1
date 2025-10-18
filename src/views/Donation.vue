@@ -133,13 +133,12 @@ async function processDonation() {
 
     await sendDonationReceiptFunction({ donationData })
 
-    // Show success toast
-    toast.success(`Thank you for your donation of $${totalAmount.toFixed(2)} AUD! A receipt has been sent to ${user.value.email}`, {
-      autoClose: 5000
+    // Redirect to home with success message
+    const successMessage = `Thank you for your donation of $${totalAmount.toFixed(2)} AUD! A receipt has been sent to ${user.value.email}`
+    router.push({
+      path: '/',
+      query: { donationSuccess: encodeURIComponent(successMessage) }
     })
-
-    // TODO: Change redirection later - currently redirecting to home page
-    router.push('/')
 
   } catch (error) {
     console.error('Donation processing error:', error)
