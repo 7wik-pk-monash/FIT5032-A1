@@ -11,6 +11,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions";
 import * as functions from "firebase-functions";
 import admin from "firebase-admin";
+import { defineSecret } from "firebase-functions/params";
 // For cost control, you can set the maximum number of containers that can be
 // running at the same time. This helps mitigate the impact of unexpected
 // traffic spikes by instead downgrading performance. This limit is a
@@ -164,4 +165,58 @@ export const seedUsers = onCall(async (data) => {
     console.error('Error seeding users:', error);
     throw new functions.https.HttpsError('internal', 'Failed to seed users');
   }
+});
+
+// nodemailer functions
+import nodemailer from 'nodemailer';
+
+// Define secrets
+const gmailUser = defineSecret('GMAIL_USER');
+const gmailPass = defineSecret('GMAIL_PASS');
+
+// Create transporter function (called at runtime)
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: gmailUser.value(),
+      pass: gmailPass.value()
+    }
+  });
+}
+
+// Email function
+async function sendEmail(mailOptions) {
+  try {
+    const transporter = createTransporter();
+
+    const result = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Cloud Function
+export const sendWelcomeEmail = onCall(async (data) => {
+  const { userEmail, userData } = data.data;
+  const mailOptions = {
+    from: gmailUser.value(),
+    to: userEmail,
+    subject: 'Welcome to TeamUp!',
+    html: `
+      <h2>Welcome to TeamUp!</h2>
+      <p>Hello ${userData.firstName},</p>
+      <p>Thank you for registering with TeamUp. We're excited to have you join our community!</p>
+      <p>Your account details:</p>
+      <ul>
+        <li>Name: ${userData.firstName} ${userData.lastName}</li>
+        <li>Email: ${userData.email}</li>
+        <li>City: ${userData.city}</li>
+      </ul>
+      <p>Get started by exploring our events and activities!</p>
+    `,
+  };
+  return await sendEmail(userEmail, mailOptions);
 });

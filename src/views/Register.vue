@@ -77,6 +77,7 @@ import Multiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.css'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
+import { getFunctions, httpsCallable } from 'firebase/functions'
 import { auth, db } from '../firebase/init.js'
 
 const router = useRouter()
@@ -138,10 +139,29 @@ async function registerUser() {
     await setDoc(doc(db, 'users', firebaseUser.uid), userData)
 
     toast.success('Registration successful!')
+
+    // After successful registration
+    const functions = getFunctions();
+    const sendWelcomeEmailFunction = httpsCallable(functions, 'sendWelcomeEmail');
+
+    try {
+      await sendWelcomeEmailFunction({
+        userEmail: user.value.email,
+        userData: {
+          firstName: user.value.firstName,
+          lastName: user.value.lastName,
+          email: user.value.email,
+          city: user.value.city
+        }
+      });
+    } catch (error) {
+      console.log('Email sending failed:', error);
+    }
+
     router.push('/login')
   } catch (error) {
     console.error('Registration error:', error)
-    
+
     if (error.code === 'auth/email-already-in-use') {
       toast.error('Email already registered.')
     } else if (error.code === 'auth/weak-password') {

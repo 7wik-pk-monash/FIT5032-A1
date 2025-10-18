@@ -5,6 +5,7 @@ CAT D
 - add social login (google) LP
 
 - donation page (with stripe logic?) - would allow emailing the receipt - create receipt format for this
+- Emailing done but NO ATTACHMENT (yet)
 
 - tabular data - admin dashboard already has one, try adding sort, search (by each column) & limit w pagination
   - also add admin table for deleted users
@@ -15,7 +16,7 @@ CAT D
 
 CAT E
 
-- think of more cloud funcs - triggering emails?
+- think of more cloud funcs - triggering emails? - DONE (could extend)
 
 - geolocation LP - in maps, show users how far away each activity is from them by driving or public transport (or if haversine distance is under some limit, show walking also). Also show autocomplete suggestions on the text box if possible
 

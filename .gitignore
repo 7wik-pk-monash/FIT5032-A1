@@ -28,3 +28,8 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Environment variables (secrets)
+.env
+functions/.env
+google_oauth/*
