@@ -141,9 +141,10 @@
             type="checkbox"
             id="attendingCheckbox"
             v-model="userAttending"
+            :disabled="isEditMode"
           />
           <label class="form-check-label" for="attendingCheckbox">
-            I am attending this activity
+            I am attending this activity {{ isEditMode ? '(cannot change when editing)' : '' }}
           </label>
         </div>
       </div>
@@ -315,7 +316,10 @@ async function loadActivityForEdit(activityId) {
       }
       activity.value.age = activityData.age
       activity.value.accessibility = activityData.accessibility || 'open' // Default to 'open' if not set
-      userAttending.value = activityData.rsvps > 0
+
+      // Check if current user is in the rsvps array
+      const rsvps = activityData.rsvps || []
+      userAttending.value = Array.isArray(rsvps) && rsvps.includes(user.value?.uid)
 
       // Set address input
       addressInput.value = activityData.location
@@ -875,7 +879,7 @@ async function submitActivity() {
       location: activity.value.location.address,
       lat: activity.value.location.lat,
       lng: activity.value.location.lng,
-      rsvps: userAttending.value ? 1 : 0, // Increment by 1 if user is attending
+      rsvps: userAttending.value ? [user.value.uid] : [], // Add user ID to array if attending
       age: activity.value.age,
       accessibility: activity.value.accessibility,
       createdBy: user.value.uid // Track who created this activity

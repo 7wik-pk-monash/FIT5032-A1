@@ -1,0 +1,63 @@
+[
+  {
+    "email": "alice.johnson@example.com",
+    "password": "Password123!",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "dob": "1995-03-15",
+    "city": "Melbourne",
+    "bio": "Love playing football and tennis on weekends!",
+    "preferredPlaygrounds": ["Carlton Gardens", "Princes Park"],
+    "sportsInterest": [{"name": "Football"}, {"name": "Tennis"}],
+    "role": "user"
+  },
+  {
+    "email": "bob.smith@example.com",
+    "password": "Password123!",
+    "firstName": "Bob",
+    "lastName": "Smith",
+    "dob": "1988-07-22",
+    "city": "Brunswick",
+    "bio": "Cricket enthusiast and weekend warrior",
+    "preferredPlaygrounds": ["WT Peterson Oval"],
+    "sportsInterest": [{"name": "Cricket"}, {"name": "Walking Group"}],
+    "role": "user"
+  },
+  {
+    "email": "carol.williams@example.com",
+    "password": "Password123!",
+    "firstName": "Carol",
+    "lastName": "Williams",
+    "dob": "1992-11-08",
+    "city": "Fitzroy",
+    "bio": "Active senior looking to stay fit and meet new people",
+    "preferredPlaygrounds": ["West Brunswick Tennis Club"],
+    "sportsInterest": [{"name": "Tennis"}, {"name": "Walking Group"}],
+    "role": "user"
+  },
+  {
+    "email": "david.brown@example.com",
+    "password": "Password123!",
+    "firstName": "David",
+    "lastName": "Brown",
+    "dob": "2005-05-12",
+    "city": "Carlton",
+    "bio": "Young football player, love team sports",
+    "preferredPlaygrounds": ["Carlton Gardens"],
+    "sportsInterest": [{"name": "Football"}, {"name": "Cricket"}],
+    "role": "user"
+  },
+  {
+    "email": "emma.davis@example.com",
+    "password": "Password123!",
+    "firstName": "Emma",
+    "lastName": "Davis",
+    "dob": "1990-09-30",
+    "city": "Melbourne",
+    "bio": "Fitness enthusiast and community organizer",
+    "preferredPlaygrounds": ["Princes Park", "Carlton Gardens"],
+    "sportsInterest": [{"name": "Walking Group"}, {"name": "Tennis"}],
+    "role": "user"
+  }
+]
+

@@ -79,7 +79,12 @@ const stats = ref({
 
 function computeStats() {
   stats.value.total = activities.value.length
-  stats.value.totalRsvps = activities.value.reduce((sum, a) => sum + (a.rsvps || 0), 0)
+
+  // Calculate total RSVPs by summing up the length of rsvps arrays
+  stats.value.totalRsvps = activities.value.reduce((sum, a) => {
+    const rsvps = a.rsvps || []
+    return sum + (Array.isArray(rsvps) ? rsvps.length : 0)
+  }, 0)
 
   const sportCount = {}
   const playgroundCount = {}

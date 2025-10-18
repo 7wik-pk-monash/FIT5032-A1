@@ -67,7 +67,7 @@
                 <strong>Location:</strong> {{ program.location }}<br />
                 <strong>Date:</strong> {{ program.date }} at {{ program.time }}<br />
                 <strong>Sport:</strong> {{ program.sport }}<br />
-                <strong>Participants:</strong> {{ program.rsvps }}/{{ program.capacity }}<br />
+                <strong>Participants:</strong> {{ (program.rsvps || []).length }}/{{ program.capacity }}<br />
                 <strong>Age Group:</strong> {{ program.age }}<br />
                 <strong>Accessibility:</strong> {{ program.accessibility }}
               </p>
@@ -90,6 +90,25 @@
                   @click.stop="openRatingModal(program.location)"
                 >
                   Rate Playground
+                </button>
+              </div>
+
+              <!-- Join/Leave buttons -->
+              <div v-if="user" class="mb-2">
+                <button
+                  v-if="!isUserJoined(program)"
+                  class="btn btn-sm btn-success"
+                  @click.stop="handleJoinActivity(program.id)"
+                  :disabled="isActivityFull(program)"
+                >
+                  {{ isActivityFull(program) ? 'Activity Full' : 'Join Activity' }}
+                </button>
+                <button
+                  v-else
+                  class="btn btn-sm btn-warning"
+                  @click.stop="handleLeaveActivity(program.id)"
+                >
+                  Leave Activity
                 </button>
               </div>
 
@@ -204,7 +223,7 @@ import { toast } from 'vue3-toastify'
 import { useData } from '../composables/useData.js'
 import { useAuth } from '../composables/useAuth.js'
 
-const { activities, playgrounds, loadActivities, loadPlaygrounds, addPlaygroundReview, deleteActivity: deleteActivityFromDB } = useData()
+const { activities, playgrounds, loadActivities, loadPlaygrounds, addPlaygroundReview, deleteActivity: deleteActivityFromDB, joinActivity, leaveActivity } = useData()
 const { user } = useAuth()
 const router = useRouter()
 
@@ -305,7 +324,7 @@ const addMarkers = (events) => {
             <h6>${event.title}</h6>
             <p>${event.location}</p>
             <p>${event.date} at ${event.time}</p>
-            <p>${event.rsvps}/${event.capacity} participants</p>
+            <p>${(event.rsvps || []).length}/${event.capacity} participants</p>
           </div>
         `)
         .on('click', () => {
@@ -533,6 +552,81 @@ const editActivity = (activity) => {
     path: '/create-activity',
     query: { edit: activity.id }
   })
+}
+
+// Check if user has joined an activity
+const isUserJoined = (activity) => {
+  if (!user.value) return false
+  const rsvps = activity.rsvps || []
+  return Array.isArray(rsvps) && rsvps.includes(user.value.uid)
+}
+
+// Check if activity is full
+const isActivityFull = (activity) => {
+  const rsvps = activity.rsvps || []
+  return Array.isArray(rsvps) && rsvps.length >= activity.capacity
+}
+
+// Handle joining an activity
+const handleJoinActivity = async (activityId) => {
+  if (!user.value) {
+    toast.error('You must be logged in to join activities', { autoClose: 3000 })
+    return
+  }
+
+  try {
+    await joinActivity(activityId, user.value.uid)
+    toast.success('Successfully joined the activity!', { autoClose: 3000 })
+
+    // Reload and update the display
+    await loadActivities()
+    const enriched = activities.value.map(program => {
+      const pg = playgrounds.value.find(p =>
+        p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
+      )
+      return {
+        ...program,
+        averageRating: pg?.averageRating || null,
+        reviewCount: pg?.reviewCount || 0
+      }
+    })
+    programs.value = enriched
+    filteredPrograms.value = enriched
+  } catch (error) {
+    console.error('Error joining activity:', error)
+    toast.error(error.message || 'Failed to join activity', { autoClose: 3000 })
+  }
+}
+
+// Handle leaving an activity
+const handleLeaveActivity = async (activityId) => {
+  if (!user.value) {
+    toast.error('You must be logged in to leave activities', { autoClose: 3000 })
+    return
+  }
+
+  try {
+    await leaveActivity(activityId, user.value.uid)
+    toast.success('Successfully left the activity', { autoClose: 3000 })
+
+    // Reload and update the display
+    await loadActivities()
+    const enriched = activities.value.map(program => {
+      const pg = playgrounds.value.find(p =>
+        p.name.trim().toLowerCase() === program.location.trim().toLowerCase()
+      )
+      return {
+        ...program,
+        averageRating: pg?.averageRating || null,
+        reviewCount: pg?.reviewCount || 0
+      }
+    })
+    programs.value = enriched
+    filteredPrograms.value = enriched
+  } catch (error) {
+    console.error('Error leaving activity:', error)
+    toast.error(error.message || 'Failed to leave activity', { autoClose: 3000 })
+  }
 }
 
 // Lifecycle

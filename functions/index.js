@@ -94,3 +94,74 @@ export const deleteUser = onCall(async (data) => {
     throw new functions.https.HttpsError('internal', 'Failed to delete user');
   }
 });
+
+export const seedUsers = onCall(async (data) => {
+  try {
+    const sampleUsers = data?.data?.users || [];
+    const createdUserIds = [];
+
+    for (const userData of sampleUsers) {
+      try {
+        // Check if user already exists in Firestore by email
+        const userQuery = await admin.firestore()
+          .collection('users')
+          .where('email', '==', userData.email)
+          .limit(1)
+          .get();
+
+        if (!userQuery.empty) {
+          // User already exists, add their ID to the list
+          createdUserIds.push(userQuery.docs[0].id);
+          console.log(`User ${userData.email} already exists`);
+          continue;
+        }
+
+        // Check if user exists in Auth
+        let authUser;
+        try {
+          authUser = await admin.auth().getUserByEmail(userData.email);
+          console.log(`Auth user ${userData.email} already exists`);
+        } catch (error) {
+          // User doesn't exist in Auth, create them
+          authUser = await admin.auth().createUser({
+            email: userData.email,
+            password: userData.password,
+            displayName: `${userData.firstName} ${userData.lastName}`
+          });
+          console.log(`Created Auth user ${userData.email}`);
+        }
+
+        // Create user document in Firestore
+        await admin.firestore().collection('users').doc(authUser.uid).set({
+          uid: authUser.uid,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          dob: userData.dob || '',
+          bio: userData.bio || '',
+          city: userData.city || '',
+          preferredPlaygrounds: userData.preferredPlaygrounds || [],
+          sportsInterest: userData.sportsInterest || [],
+          role: userData.role || 'user',
+          createdAt: new Date().toISOString()
+        });
+
+        createdUserIds.push(authUser.uid);
+        console.log(`Created Firestore document for ${userData.email}`);
+
+      } catch (error) {
+        console.error(`Error seeding user ${userData.email}:`, error);
+        // Continue with other users even if one fails
+      }
+    }
+
+    return {
+      success: true,
+      message: `Seeded ${createdUserIds.length} users`,
+      userIds: createdUserIds
+    };
+  } catch (error) {
+    console.error('Error seeding users:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to seed users');
+  }
+});
