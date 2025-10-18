@@ -25,7 +25,7 @@ CAT F
 
 - bulk emails : allow users to subscribe to mailing lists - whenever an activity is scheduled on a ground (or) for any combination of filters/parameters like sport(s), age group, accessibility options, time period, etc. By default, have everything be exhaustively selected i.e., have all sports be selected, have time period be "any time" and allow the user to restrict and fine tune these as per their preferences. handle mailing using firestore's onCreate triggers
 
-- charts - show bar chart of number of activities per sport in the next 2 weeks, also per accessibility type, maybe per suburb too
+- charts - DONE ✅ - show bar chart of number of activities per sport in the next 2 weeks, also per accessibility type, maybe per suburb too
 
 - appointment booking with calendar - when users join events, add that to their personal calendar (if they have one integrated) and check for schedule conflicts
 

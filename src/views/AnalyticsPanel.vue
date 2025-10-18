@@ -36,9 +36,66 @@
             <div>
               <h4 class="card-title mb-1">
                 <i class="pi pi-chart-bar me-2"></i>
-                Activities by Sport
+                {{ groupBy === 'sport' ? 'Activities by Sport' : 'Accessibility & Inclusion' }}
               </h4>
-              <p class="card-subtitle text-muted mb-0">Distribution of activities across different sports</p>
+              <p class="card-subtitle text-muted mb-0">
+                {{ groupBy === 'sport' ? 'Distribution of activities across different sports' : 'Activities categorized by accessibility and inclusion features' }}
+              </p>
+            </div>
+            <div class="chart-filters">
+              <div class="filter-group">
+                <label class="filter-label">Time Range:</label>
+                <div class="btn-group" role="group">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="timeFilter"
+                    id="allTime"
+                    value="all"
+                    v-model="timeFilter"
+                    @change="updateChart"
+                  >
+                  <label class="btn btn-outline-primary" for="allTime">All Time</label>
+
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="timeFilter"
+                    id="futureOnly"
+                    value="future"
+                    v-model="timeFilter"
+                    @change="updateChart"
+                  >
+                  <label class="btn btn-outline-primary" for="futureOnly">Future Only</label>
+                </div>
+              </div>
+
+              <div class="filter-group">
+                <label class="filter-label">Group By:</label>
+                <div class="btn-group" role="group">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="groupBy"
+                    id="bySport"
+                    value="sport"
+                    v-model="groupBy"
+                    @change="updateChart"
+                  >
+                  <label class="btn btn-outline-secondary" for="bySport">Sport</label>
+
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="groupBy"
+                    id="byAccessibility"
+                    value="accessibility"
+                    v-model="groupBy"
+                    @change="updateChart"
+                  >
+                  <label class="btn btn-outline-secondary" for="byAccessibility">Accessibility</label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -119,6 +176,12 @@ let chartInstance = null
 // Loading state
 const loading = ref(false)
 
+// Time filter for chart
+const timeFilter = ref('all')
+
+// Group by filter for chart
+const groupBy = ref('sport')
+
 // Analytics stats
 const stats = ref({
   total: 0,
@@ -129,6 +192,41 @@ const stats = ref({
   activitiesThisMonth: 0,
   sportDistribution: {}
 })
+
+// Helper function to filter only future events (copied from Events.vue)
+const filterFutureEvents = (events) => {
+  const now = new Date()
+  return events.filter(event => {
+    if (!event.datetime) return false
+
+    try {
+      const eventDate = new Date(event.datetime)
+      return eventDate > now
+    } catch (error) {
+      console.error('Error parsing datetime:', error)
+      return false
+    }
+  })
+}
+
+// Get filtered activities based on time filter
+const getFilteredActivities = () => {
+  if (timeFilter.value === 'future') {
+    return filterFutureEvents(activities.value)
+  }
+  return activities.value
+}
+
+// Map accessibility values to user-friendly labels
+const getAccessibilityLabel = (accessibility) => {
+  const labelMap = {
+    'wheelchair': 'Wheelchair Accessible',
+    'inclusive': 'LGBTQ+ Inclusive',
+    'open': 'Open to All',
+    'Unknown': 'Not Specified'
+  }
+  return labelMap[accessibility] || `${accessibility}`
+}
 
 // Compute analytics
 function computeAnalytics() {
@@ -155,13 +253,21 @@ function computeAnalytics() {
 
   stats.value.mostPopularActivity = mostPopular.title || 'N/A'
 
-  // Calculate activities by sport
-  const sportCount = {}
-  activities.value.forEach(activity => {
-    const sport = activity.sport || 'Unknown'
-    sportCount[sport] = (sportCount[sport] || 0) + 1
+  // Calculate activities by sport or accessibility using filtered activities
+  const filteredActivities = getFilteredActivities()
+  const groupCount = {}
+  filteredActivities.forEach(activity => {
+    let groupValue
+    if (groupBy.value === 'sport') {
+      groupValue = activity.sport || 'Unknown'
+    } else {
+      // Map accessibility values to user-friendly labels
+      const accessibility = activity.accessibility || 'Unknown'
+      groupValue = getAccessibilityLabel(accessibility)
+    }
+    groupCount[groupValue] = (groupCount[groupValue] || 0) + 1
   })
-  stats.value.sportDistribution = sportCount
+  stats.value.sportDistribution = groupCount
 
   // Calculate activities this week and month
   const now = new Date()
@@ -179,6 +285,12 @@ function computeAnalytics() {
     const createdDate = new Date(activity.createdAt)
     return createdDate >= oneMonthAgo
   }).length
+}
+
+// Update chart when filter changes
+function updateChart() {
+  computeAnalytics()
+  createChart()
 }
 
 // Create bar chart
@@ -233,10 +345,21 @@ function createChart() {
           cornerRadius: 8,
           callbacks: {
             title: function(context) {
-              return context[0].label
+              const label = context[0].label
+              // For accessibility labels, show a cleaner version in tooltip
+              if (groupBy.value === 'accessibility') {
+                return label.replace(/^[^\s]+\s/, '') // Remove emoji and space
+              }
+              return label
             },
             label: function(context) {
-              return `${context.parsed.y} activities`
+              const count = context.parsed.y
+              const label = context.label
+              if (groupBy.value === 'accessibility') {
+                const cleanLabel = label.replace(/^[^\s]+\s/, '') // Remove emoji and space
+                return `${count} ${count === 1 ? 'activity' : 'activities'} - ${cleanLabel}`
+              }
+              return `${count} ${count === 1 ? 'activity' : 'activities'}`
             }
           }
         }
@@ -399,6 +522,59 @@ onMounted(async () => {
   padding: 1rem;
 }
 
+/* Chart Filters */
+.chart-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chart-filters .btn-group {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-filters .btn-check:checked + .btn {
+  background-color: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.chart-filters .btn-check[name="groupBy"]:checked + .btn {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+.chart-filters .btn {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+}
+
+.chart-filters .btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
 /* Small Stats */
 .stat-item-small {
   text-align: center;
@@ -449,6 +625,24 @@ onMounted(async () => {
 
   .chart-container {
     height: 300px;
+  }
+
+  .chart-filters {
+    margin-top: 1rem;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    align-items: stretch;
+  }
+
+  .filter-label {
+    font-size: 0.75rem;
+  }
+
+  .chart-filters .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
   }
 
   .stat-number-small {
