@@ -860,10 +860,12 @@ async function submitActivity() {
     return
   }
 
-  const detected = checkForConflicts(activity.value)
-  if (detected.length > 0) {
-    conflicts.value = detected
-    return
+  if (!isEditMode.value) {
+    const detected = checkForConflicts(activity.value)
+    if (detected.length > 0) {
+      conflicts.value = detected
+      return
+    }
   } else {
     conflicts.value = []
   }
