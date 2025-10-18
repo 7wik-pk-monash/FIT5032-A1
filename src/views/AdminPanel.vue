@@ -743,16 +743,16 @@ onMounted(async () => {
 }
 
 .stat-number {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .stat-label {
   color: #6c757d;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin: 0.5rem 0 0 0;
   font-weight: 500;
 }
@@ -826,7 +826,11 @@ onMounted(async () => {
   }
 
   .stat-number {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
   }
 
   .user-info {
