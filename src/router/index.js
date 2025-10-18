@@ -19,7 +19,8 @@ const routes = [
   { path: '/unauthorized', component: Unauthorized },
 
   // Admin Routes
-  { path: '/admin', component: AdminPanel, meta: { requiresAuth: true, roles: ['admin'] } }
+  { path: '/admin', component: AdminPanel, meta: { requiresAuth: true, roles: ['admin'] } },
+  { path: '/admin/activities', component: ActivitiesPanel, meta: { requiresAuth: true, roles: ['admin'] } }
 
 ]
 
@@ -32,6 +33,7 @@ import { useAuth } from '@/composables/useAuth'
 
 import { toast } from 'vue3-toastify'
 import AdminPanel from '@/views/AdminPanel.vue'
+import ActivitiesPanel from '@/views/ActivitiesPanel.vue'
 
 router.beforeEach((to, from, next) => {
   const { user } = useAuth()

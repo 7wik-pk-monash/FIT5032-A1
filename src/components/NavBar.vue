@@ -25,6 +25,9 @@
             <li class="nav-item">
               <router-link to="/admin" class="nav-link">Admin Dashboard</router-link>
             </li>
+            <li class="nav-item">
+              <router-link to="/admin/activities" class="nav-link">Activities</router-link>
+            </li>
           </template>
 
           <template v-else>
