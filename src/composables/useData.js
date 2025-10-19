@@ -241,6 +241,55 @@ async function updateActivity(activityId, updateData) {
 // Delete activity
 async function deleteActivity(activityId) {
   try {
+    // Get activity data before deleting (for email notifications)
+    const activityDoc = await getDoc(doc(db, 'activities', activityId))
+    if (!activityDoc.exists()) {
+      throw new Error('Activity not found')
+    }
+
+    const activityData = activityDoc.data()
+    const rsvpUserIds = activityData.rsvps || []
+
+    // If there are RSVPs, send cancellation emails
+    if (rsvpUserIds.length > 0) {
+      try {
+        // Get user emails for RSVP users
+        const userEmails = []
+        for (const userId of rsvpUserIds) {
+          const userDoc = await getDoc(doc(db, 'users', userId))
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            if (userData.email) {
+              userEmails.push(userData.email)
+            }
+          }
+        }
+
+        // Send bulk cancellation emails if we have email addresses
+        if (userEmails.length > 0) {
+          const functions = getFunctions()
+          const sendCancellationEmailsFunction = httpsCallable(functions, 'sendActivityCancellationEmails')
+
+          await sendCancellationEmailsFunction({
+            activityData: {
+              title: activityData.title,
+              sport: activityData.sport,
+              location: activityData.location,
+              datetime: activityData.datetime,
+              capacity: activityData.capacity
+            },
+            rsvpUserEmails: userEmails
+          })
+
+          console.log(`Sent cancellation emails to ${userEmails.length} users`)
+        }
+      } catch (emailError) {
+        console.error('Error sending cancellation emails:', emailError)
+        // Continue with deletion even if email sending fails
+      }
+    }
+
+    // Delete the activity
     await deleteDoc(doc(db, 'activities', activityId))
     await loadActivities() // Reload activities
   } catch (error) {

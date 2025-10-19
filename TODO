@@ -18,6 +18,9 @@ CAT E
 - think of more cloud funcs - triggering emails? - DONE ✅ (could extend)
 
 - geolocation LP - in maps, show users how far away each activity is from them by driving or public transport (or if haversine distance is under some limit, show walking also). Also show autocomplete suggestions on the text box if possible
+- Whats already done
+  - automatically preselect the nearest public play area / playground to the user on create activity page
+  - geocoding based on user's address input in the text field
 
 CAT F
 

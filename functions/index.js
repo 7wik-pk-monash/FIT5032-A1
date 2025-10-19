@@ -339,3 +339,66 @@ export const sendDonationReceipt = onCall(async (data) => {
     return { success: false, error: error.message };
   }
 });
+
+// Cloud Function for bulk activity cancellation emails
+export const sendActivityCancellationEmails = onCall(async (data) => {
+  const { activityData, rsvpUserEmails } = data.data;
+
+  try {
+    const transporter = createTransporter();
+    const results = [];
+
+    // Send email to each RSVP user
+    for (const userEmail of rsvpUserEmails) {
+      try {
+        const mailOptions = {
+          from: gmailUser.value(),
+          to: userEmail,
+          subject: `Activity Cancelled: ${activityData.title}`,
+          html: `
+            <h2>Activity Cancelled</h2>
+            <p>Dear TeamUp Member,</p>
+            <p>We regret to inform you that the following activity has been cancelled:</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+              <h3>${activityData.title}</h3>
+              <p><strong>Sport:</strong> ${activityData.sport}</p>
+              <p><strong>Location:</strong> ${activityData.location}</p>
+              <p><strong>Date & Time:</strong> ${new Date(activityData.datetime).toLocaleString('en-AU')}</p>
+              <p><strong>Capacity:</strong> ${activityData.capacity} participants</p>
+            </div>
+            <p>We apologize for any inconvenience this may cause. Please check our platform for other exciting activities you can join!</p>
+            <p>Thank you for your understanding.</p>
+            <p>Best regards,<br>TeamUp Team</p>
+          `
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        results.push({
+          email: userEmail,
+          success: true,
+          messageId: result.messageId
+        });
+      } catch (emailError) {
+        console.error(`Error sending cancellation email to ${userEmail}:`, emailError);
+        results.push({
+          email: userEmail,
+          success: false,
+          error: emailError.message
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    return {
+      success: true,
+      totalSent: successCount,
+      totalFailed: failureCount,
+      results: results
+    };
+  } catch (error) {
+    console.error('Error sending bulk cancellation emails:', error);
+    return { success: false, error: error.message };
+  }
+});
