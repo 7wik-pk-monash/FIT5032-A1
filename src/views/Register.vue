@@ -1,7 +1,12 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
+  <div class="page-header">
+    <div class="container">
+      <h1 class="page-title text-center mb-0">Register</h1>
+    </div>
+  </div>
+
   <section class="container py-5">
-    <h1 class="mb-4">Register</h1>
     <form @submit.prevent="registerUser" autocomplete="on">
       <div class="row">
         <div class="mb-3 col-md-6">
@@ -174,3 +179,20 @@ async function registerUser() {
   }
 }
 </script>
+
+<style scoped>
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #000000 100%);
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+}
+</style>

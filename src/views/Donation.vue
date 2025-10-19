@@ -1,13 +1,17 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
 
-  <section class="container donation-container py-5">
+  <div class="page-header">
+    <div class="container">
+      <h1 class="page-title text-center mb-3">Equip a Community</h1>
+      <p class="page-subtitle text-center mb-0">
+        Your donation helps us purchase sports equipment for underrepresented communities. Choose a
+        kit or enter a custom amount.
+      </p>
+    </div>
+  </div>
 
-    <h1 class="page-title text-center mb-3">Equip a Community</h1>
-    <p class="page-subtitle text-center mb-5">
-      Your donation helps us purchase sports equipment for underrepresented communities. Choose a
-      kit or enter a custom amount.
-    </p>
+  <section class="container donation-container py-5">
 
     <div class="row g-4">
       <div v-for="item in donationItems" :key="item.key" class="col-12 col-md-6 col-lg-3">
@@ -148,13 +152,24 @@ async function processDonation() {
 </script>
 
 <style scoped>
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #000000 100%);
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
 .page-title {
   font-size: 2.5rem;
   font-weight: 700;
+  color: white;
 }
 .page-subtitle {
-  color: #555;
+  color: white;
   font-size: 1.1rem;
+  opacity: 0.9;
 }
 .donation-card {
   border-radius: 0.75rem;

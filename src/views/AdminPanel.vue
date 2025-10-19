@@ -550,7 +550,7 @@ onMounted(async () => {
 
 /* Header Section */
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #000000 100%);
   color: white;
   padding: 2rem 0;
   margin-bottom: 2rem;

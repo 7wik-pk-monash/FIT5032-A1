@@ -1,8 +1,13 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
 
+  <div class="page-header">
+    <div class="container">
+      <h1 class="page-title text-center mb-0">Find Activities & Programs</h1>
+    </div>
+  </div>
+
   <section class="container py-5" id="events-page">
-    <h1 class="page-title text-center mb-4">Find Activities & Programs</h1>
 
     <!-- Filters Row -->
     <div class="row mb-3">
@@ -724,9 +729,19 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Page Header */
+.page-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #000000 100%);
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
 .page-title {
   font-size: 2.5rem;
   font-weight: 700;
+  color: white;
 }
 
 .card {
