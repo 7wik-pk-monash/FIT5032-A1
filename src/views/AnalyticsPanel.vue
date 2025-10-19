@@ -12,14 +12,24 @@
             <p class="dashboard-subtitle">Platform insights and activity analytics</p>
           </div>
           <div class="col-auto">
-            <div class="stats-summary">
-              <div class="stat-item">
-                <span class="stat-number" style="color: white;">{{ activities.length }}</span>
-                <span style="color: white;">Total Activities</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number" style="color: white;">{{ stats.totalRsvps }}</span>
-                <span style="color: white;">Total RSVPs</span>
+            <div class="d-flex align-items-center gap-3">
+              <button
+                @click="exportToPDF"
+                class="btn btn-light btn-sm"
+                :disabled="loading"
+              >
+                <i class="pi pi-download me-2"></i>
+                Export PDF
+              </button>
+              <div class="stats-summary">
+                <div class="stat-item">
+                  <span class="stat-number" style="color: white;">{{ activities.length }}</span>
+                  <span style="color: white;">Total Activities</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number" style="color: white;">{{ stats.totalRsvps }}</span>
+                  <span style="color: white;">Total RSVPs</span>
+                </div>
               </div>
             </div>
           </div>
@@ -165,6 +175,7 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import { useData } from '../composables/useData.js'
 import Chart from 'chart.js/auto'
+import { jsPDF } from 'jspdf'
 
 const route = useRoute()
 const { activities, loadActivities } = useData()
@@ -398,6 +409,130 @@ function createChart() {
       }
     }
   })
+}
+
+// Export analytics to PDF
+async function exportToPDF() {
+  try {
+    loading.value = true
+    toast.info('Generating PDF report...')
+
+    // Create new PDF document
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    let yPosition = 20
+
+    // Set font
+    doc.setFont('helvetica')
+
+    // Header
+    doc.setFontSize(24)
+    doc.setTextColor(102, 126, 234) // TeamUp blue
+    doc.text('TeamUp Analytics Report', pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 15
+
+    doc.setFontSize(12)
+    doc.setTextColor(0, 0, 0)
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-AU')}`, pageWidth / 2, yPosition, { align: 'center' })
+    yPosition += 20
+
+    // Summary Statistics
+    doc.setFontSize(16)
+    doc.setTextColor(44, 62, 80)
+    doc.text('Summary Statistics', 20, yPosition)
+    yPosition += 10
+
+    doc.setFontSize(12)
+    doc.text(`Total Activities: ${stats.value.total}`, 20, yPosition)
+    yPosition += 8
+    doc.text(`Total RSVPs: ${stats.value.totalRsvps}`, 20, yPosition)
+    yPosition += 8
+    doc.text(`Average RSVPs per Activity: ${stats.value.averageRsvpsPerActivity}`, 20, yPosition)
+    yPosition += 8
+    doc.text(`Activities This Week: ${stats.value.activitiesThisWeek}`, 20, yPosition)
+    yPosition += 8
+    doc.text(`Activities This Month: ${stats.value.activitiesThisMonth}`, 20, yPosition)
+    yPosition += 15
+
+    // Chart Data Table
+    doc.setFontSize(16)
+    doc.text(`${groupBy.value === 'sport' ? 'Activities by Sport' : 'Activities by Accessibility'}`, 20, yPosition)
+    yPosition += 10
+
+    // Create table for chart data
+    const chartData = stats.value.sportDistribution
+    const labels = Object.keys(chartData)
+    const values = Object.values(chartData)
+
+    // Table headers
+    doc.setFontSize(10)
+    doc.setFillColor(248, 249, 250)
+    doc.rect(20, yPosition - 5, pageWidth - 40, 8, 'F')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Category', 25, yPosition)
+    doc.text('Count', pageWidth - 60, yPosition)
+    yPosition += 8
+
+    // Table rows
+    labels.forEach((label, index) => {
+      if (yPosition > pageHeight - 20) {
+        doc.addPage()
+        yPosition = 20
+      }
+
+      doc.text(label, 25, yPosition)
+      doc.text(values[index].toString(), pageWidth - 60, yPosition)
+      yPosition += 6
+    })
+
+    yPosition += 10
+
+    // Chart Image (if available)
+    if (chartCanvas.value) {
+      try {
+        // Convert chart to image
+        const chartImage = chartCanvas.value.toDataURL('image/png')
+
+        // Add new page for chart
+        doc.addPage()
+        yPosition = 20
+
+        doc.setFontSize(16)
+        doc.text('Chart Visualization', 20, yPosition)
+        yPosition += 15
+
+        // Add chart image
+        const imgWidth = pageWidth - 40
+        const imgHeight = (imgWidth * 0.6) // Maintain aspect ratio
+        doc.addImage(chartImage, 'PNG', 20, yPosition, imgWidth, imgHeight)
+      } catch (error) {
+        console.error('Error adding chart to PDF:', error)
+        doc.text('Chart could not be included in PDF', 20, yPosition)
+      }
+    }
+
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setTextColor(128, 128, 128)
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
+      doc.text('TeamUp Analytics Dashboard', pageWidth - 20, pageHeight - 10, { align: 'right' })
+    }
+
+    // Save the PDF
+    const fileName = `TeamUp_Analytics_${new Date().toISOString().split('T')[0]}.pdf`
+    doc.save(fileName)
+
+    toast.success('PDF report exported successfully!')
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    toast.error('Failed to export PDF report')
+  } finally {
+    loading.value = false
+  }
 }
 
 // Load data on mount

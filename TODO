@@ -20,13 +20,14 @@ CAT E
 - geolocation LP - in maps, show users how far away each activity is from them by driving or public transport (or if haversine distance is under some limit, show walking also). Also show autocomplete suggestions on the text box if possible
 - Whats already done
   - automatically preselect the nearest public play area / playground to the user on create activity page
+  - whenever user drops a pin on the map, a verification step is triggered with OpenStreetMaps' Overpass API to check if that location is a play area
   - geocoding based on user's address input in the text field
 
 CAT F
 
 - admin dashboard already DONE ✅
 
-- bulk emails : allow users to subscribe to mailing lists - whenever an activity is scheduled on a ground (or) for any combination of filters/parameters like sport(s), age group, accessibility options, time period, etc. By default, have everything be exhaustively selected i.e., have all sports be selected, have time period be "any time" and allow the user to restrict and fine tune these as per their preferences. handle mailing using firestore's onCreate triggers
+- bulk emails : allow users to subscribe to mailing lists - whenever an activity is scheduled on a ground (or) for any combination of filters/parameters like sport(s), age group, accessibility options, time period, etc. By default, have everything be exhaustively selected i.e., have all sports be selected, have time period be "any time" and allow the user to restrict and fine tune these as per their preferences. handle mailing using firestore's onCreate triggers - DONE ✅
 
 - charts - DONE ✅ - show bar chart of number of activities per sport in the next 2 weeks, also per accessibility type, maybe per suburb too
 
