@@ -193,9 +193,41 @@ console.log(data.data); // Array of nearby activities
 
 ### cURL
 ```bash
-# Test the API
-curl "http://localhost:3001/api/activities/nearby?lat=37.7749&lng=-122.4194&limit=3"
-
 # Health check
 curl "http://localhost:3001/api/health"
+
+# Get all activities
+curl "http://localhost:3001/api/activities"
+
+# Get activities with limit
+curl "http://localhost:3001/api/activities?limit=5"
+
+# Get nearby activities (WT Peterson Oval)
+curl "http://localhost:3001/api/activities/nearby?lat=-37.78901304581446&lng=144.98125371269705&limit=5"
+
+# Get nearby activities (Carlton Gardens)
+curl "http://localhost:3001/api/activities/nearby?lat=-37.805442618848176&lng=144.97137684649525&limit=3"
+
+# Process donation (valid)
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"John Doe","donorEmail":"ferntreegully036@gmail.com","donationAmount":50.00}'
+
+# Test donation validation (invalid email)
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"Jane Smith","donorEmail":"invalid-email","donationAmount":25.00}'
+
+# Test donation validation (negative amount)
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"Bob Wilson","donorEmail":"bob@example.com","donationAmount":-10}'
+
+# Test donation validation (missing fields)
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"Alice Brown"}'
+
+# Test invalid endpoint (404)
+curl "http://localhost:3001/api/invalid"
 ```

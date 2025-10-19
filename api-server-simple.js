@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { firebaseConfig } from './firebase-config.js';
 
 dotenv.config();
 
@@ -13,16 +14,6 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDHliSu8Wed4qshBmKnNlibAIwk_YhSZNA",
-  authDomain: "fit5032-f8fd0.firebaseapp.com",
-  projectId: "fit5032-f8fd0",
-  storageBucket: "fit5032-f8fd0.firebasestorage.app",
-  messagingSenderId: "294294097041",
-  appId: "1:294294097041:web:c7abcc34d181a7f569c330"
-};
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);

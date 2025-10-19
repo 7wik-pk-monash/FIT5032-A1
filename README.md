@@ -30,6 +30,12 @@ npm install
 npm run dev
 ```
 
+### Compile and Hot-Reload for Development (With External Endpoints - described below)
+
+```sh
+npm run dev:full
+```
+
 ### Compile and Minify for Production
 
 ```sh
@@ -40,4 +46,44 @@ npm run build
 
 ```sh
 npm run lint
+```
+
+## API Server
+
+The project includes an Express.js API server that provides external endpoints for accessing TeamUp data and for submitting (mock) donations.
+ 
+### Start API Server
+
+```sh
+# Start API server only
+node api-server-simple.js
+
+# Start both Vue app and API server concurrently
+npm run dev:full
+```
+
+### API Endpoints
+
+- **Health Check**: `GET /api/health`
+- **Get All Activities**: `GET /api/activities?limit=10`
+- **Get Nearby Activities**: `GET /api/activities/nearby?lat=37.7749&lng=-122.4194&limit=5`
+- **Process Donation**: `POST /api/donations`
+
+**Base URL**: `http://localhost:3001`
+
+For complete API documentation with examples, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md).
+
+### Quick API Test
+
+```sh
+# Health check
+curl "http://localhost:3001/api/health"
+
+# Get nearby activities
+curl "http://localhost:3001/api/activities/nearby?lat=-37.78901304581446&lng=144.98125371269705&limit=5"
+
+# Process donation
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"Test User","donorEmail":"test@example.com","donationAmount":50.00}'
 ```

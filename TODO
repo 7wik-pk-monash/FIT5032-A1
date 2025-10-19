@@ -27,9 +27,9 @@ CAT F
 
 - charts - DONE ✅ - show bar chart of number of activities per sport in the next 2 weeks, also per accessibility type, maybe per suburb too
 
-- appointment booking with calendar - when users join events, add that to their personal calendar (if they have one integrated) and check for schedule conflicts
+- [ appointment booking with calendar - when users join events, add that to their personal calendar (if they have one integrated) and check for schedule conflicts ] - NOT NEEDED ANYMORE
 
-- or 2 APIS for external use - 
+- or 2 APIS for external use - DONE ✅
 
 GENERAL
 
