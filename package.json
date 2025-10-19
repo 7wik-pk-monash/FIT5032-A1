@@ -13,7 +13,10 @@
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "api": "node api-server-simple.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run api\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run api\"",
+    "build:full": "npm run build && npm run start:full",
+    "start:full": "concurrently \"npm run serve\" \"npm run api\"",
+    "serve": "vite preview --port 4173"
   },
   "dependencies": {
     "bootstrap": "^5.3.7",

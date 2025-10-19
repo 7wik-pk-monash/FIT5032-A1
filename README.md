@@ -42,6 +42,14 @@ npm run dev:full
 npm run build
 ```
 
+### Build and Run Full Application in Production
+
+```sh
+npm run build:full
+```
+
+This command builds the Vue application for production and starts both the Vue app (on port 4173) and Express API server (on port 3001) together.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
@@ -58,8 +66,11 @@ The project includes an Express.js API server that provides external endpoints f
 # Start API server only
 node api-server-simple.js
 
-# Start both Vue app and API server concurrently
+# Start both Vue app and API server concurrently (development)
 npm run dev:full
+
+# Build and start both Vue app and API server (production)
+npm run build:full
 ```
 
 ### API Endpoints

@@ -158,6 +158,15 @@ node api-server-simple.js
 npm run dev:full
 ```
 
+### Production
+```bash
+# Build and start both Vue app and API server
+npm run build:full
+
+# Start both servers (after build)
+npm run start:full
+```
+
 ## Features
 
 - **Distance Calculation**: Uses Haversine formula for accurate distance calculations

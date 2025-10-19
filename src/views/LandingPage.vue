@@ -57,7 +57,7 @@ onMounted(() => {
 
 <style scoped>
 .hero-section {
-  background: url('@/assets/hero-bg.jpg') center/cover no-repeat;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 80vh;
   padding: 4rem 1rem;
   position: relative;
