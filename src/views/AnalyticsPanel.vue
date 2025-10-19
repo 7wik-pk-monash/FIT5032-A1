@@ -17,8 +17,9 @@
                 @click="exportToPDF"
                 class="btn btn-light btn-sm"
                 :disabled="loading"
+                aria-label="Export analytics data to PDF"
               >
-                <i class="pi pi-download me-2"></i>
+                <i class="pi pi-download me-2" aria-hidden="true"></i>
                 Export PDF
               </button>
               <div class="stats-summary">
@@ -55,7 +56,7 @@
             <div class="chart-filters">
               <div class="filter-group">
                 <label class="filter-label">Time Range:</label>
-                <div class="btn-group" role="group">
+                <div class="btn-group" role="group" aria-label="Time range filter">
                   <input
                     type="radio"
                     class="btn-check"
@@ -64,6 +65,7 @@
                     value="all"
                     v-model="timeFilter"
                     @change="updateChart"
+                    aria-describedby="timeFilterHelp"
                   >
                   <label class="btn btn-outline-primary" for="allTime">All Time</label>
 
@@ -82,7 +84,7 @@
 
               <div class="filter-group">
                 <label class="filter-label">Group By:</label>
-                <div class="btn-group" role="group">
+                <div class="btn-group" role="group" aria-label="Group by filter">
                   <input
                     type="radio"
                     class="btn-check"
@@ -112,7 +114,13 @@
 
         <div class="card-body">
           <div class="chart-container">
-            <canvas ref="chartCanvas" width="400" height="200"></canvas>
+            <canvas
+              ref="chartCanvas"
+              width="400"
+              height="200"
+              role="img"
+              :aria-label="`Bar chart showing ${groupBy === 'sport' ? 'activities by sport' : 'activities by accessibility'} distribution`"
+            ></canvas>
           </div>
         </div>
       </div>

@@ -23,6 +23,10 @@ CAT E
   - whenever user drops a pin on the map, a verification step is triggered with OpenStreetMaps' Overpass API to check if that location is a play area
   - geocoding based on user's address input in the text field
 
+- Accessibility - added ARIA labels & sr-only class for key elements for screen readers
+
+- PDF Export DONE ✅ - analytics dashboard for admins
+
 CAT F
 
 - admin dashboard already DONE ✅

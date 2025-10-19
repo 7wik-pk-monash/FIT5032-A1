@@ -331,8 +331,14 @@
             <button type="button" class="btn btn-secondary" @click="cancelDelete">
               Cancel
             </button>
-            <button type="button" class="btn btn-danger" @click="confirmDelete" :disabled="loading">
-              <i class="pi pi-trash me-1"></i>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="confirmDelete"
+              :disabled="loading"
+              aria-label="Delete selected activity"
+            >
+              <i class="pi pi-trash me-1" aria-hidden="true"></i>
               {{ loading ? 'Deleting...' : 'Delete Activity' }}
             </button>
           </div>
