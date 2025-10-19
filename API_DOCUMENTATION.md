@@ -106,6 +106,46 @@ Returns a list of all available activities.
 GET /api/activities?limit=5
 ```
 
+### 4. Process Donation
+**POST** `/api/donations`
+
+Processes a donation and sends a receipt email to the donor.
+
+**Request Body:**
+```json
+{
+  "donorName": "John Doe",
+  "donorEmail": "john@example.com",
+  "donationAmount": 100.50
+}
+```
+
+**Required Fields:**
+- `donorName` (string): Full name of the donor
+- `donorEmail` (string): Valid email address of the donor
+- `donationAmount` (number): Positive donation amount
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Thank you for your donation of $100.50 AUD! A receipt has been sent to john@example.com",
+  "receiptNumber": "TUP-1697685123456",
+  "emailSent": true,
+  "timestamp": "2025-10-19T05:37:04.824Z"
+}
+```
+
+**Error Responses:**
+- `400`: Bad Request (missing fields, invalid email, or invalid amount)
+- `500`: Internal Server Error (email sending failed)
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:3001/api/donations \
+  -H "Content-Type: application/json" \
+  -d '{"donorName":"Jane Smith","donorEmail":"jane@example.com","donationAmount":75.00}'
+```
 
 ## Running the API
 

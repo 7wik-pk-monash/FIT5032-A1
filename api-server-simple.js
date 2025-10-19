@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+const functions = getFunctions(firebaseApp);
 
 // Load playgrounds for coordinate mapping
 async function loadPlaygrounds() {
@@ -224,6 +226,77 @@ app.get('/api/activities', async (req, res) => {
   }
 });
 
+// Process donation
+app.post('/api/donations', async (req, res) => {
+  try {
+    const { donorName, donorEmail, donationAmount } = req.body;
+
+    // Validate required fields
+    if (!donorName || !donorEmail || !donationAmount) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'donorName, donorEmail, and donationAmount are required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(donorEmail)) {
+      return res.status(400).json({
+        error: 'Invalid email format',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Validate donation amount
+    const amount = parseFloat(donationAmount);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({
+        error: 'Invalid donation amount',
+        message: 'Donation amount must be a positive number'
+      });
+    }
+
+    // Generate receipt data (mirroring Donation.vue structure)
+    const donationData = {
+      receiptNumber: `TUP-${Date.now()}`,
+      date: new Date().toLocaleDateString('en-AU'),
+      donorName: donorName,
+      donorEmail: donorEmail,
+      totalAmount: amount.toFixed(2),
+      items: [{
+        name: 'Custom Donation',
+        quantity: 1,
+        unitPrice: amount,
+        total: amount
+      }]
+    };
+
+    // Call Firebase function to send donation receipt
+    const sendDonationReceiptFunction = httpsCallable(functions, 'sendDonationReceipt');
+    const result = await sendDonationReceiptFunction({ donationData });
+
+    if (result.data.success) {
+      res.json({
+        success: true,
+        message: `Thank you for your donation of $${amount.toFixed(2)} AUD! A receipt has been sent to ${donorEmail}`,
+        receiptNumber: donationData.receiptNumber,
+        emailSent: true,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      throw new Error(result.data.error || 'Failed to send donation receipt');
+    }
+
+  } catch (error) {
+    console.error('Error in /api/donations:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to process donation'
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res) => {
   console.error('Unhandled error:', err);
@@ -242,12 +315,13 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Express API server running on port ${PORT}`);
-  console.log(`📍 Nearby activities: GET /api/activities/nearby?lat=37.7749&lng=-122.4194&limit=5`);
-  console.log(`📋 All activities: GET /api/activities?limit=10`);
-  console.log(`❤️  Health check: GET /api/health`);
-  console.log(`📝 Note: Using Firestore data (same as Vue app)`);
-});
+        app.listen(PORT, () => {
+          console.log(`🚀 Express API server running on port ${PORT}`);
+          console.log(`📍 Nearby activities: GET /api/activities/nearby?lat=37.7749&lng=-122.4194&limit=5`);
+          console.log(`📋 All activities: GET /api/activities?limit=10`);
+          console.log(`💰 Process donation: POST /api/donations`);
+          console.log(`❤️  Health check: GET /api/health`);
+          console.log(`📝 Note: Using Firestore data (same as Vue app)`);
+        });
 
 export default app;
