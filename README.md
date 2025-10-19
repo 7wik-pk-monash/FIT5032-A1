@@ -50,6 +50,7 @@ npm run build:full
 
 This command builds the Vue application for production and starts both the Vue app (on port 4173) and Express API server (on port 3001) together.
 
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

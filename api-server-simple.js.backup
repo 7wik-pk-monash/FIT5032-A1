@@ -291,12 +291,12 @@ app.post('/api/donations', async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-
+  
   // Check if response has already been sent
   if (res.headersSent) {
     return next(err);
   }
-
+  
   // Ensure res.status is a function (Express 5.x compatibility)
   if (typeof res.status === 'function') {
     res.status(500).json({

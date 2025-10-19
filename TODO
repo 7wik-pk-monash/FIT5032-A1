@@ -41,4 +41,6 @@ CAT F
 
 GENERAL
 
+- UI consistency - backgrounds with the same gradient bg & title fonts and colors everywhere
+
 - make everything use data directly from firestore wherever possible instead of storing everything as reactive variables in useData()

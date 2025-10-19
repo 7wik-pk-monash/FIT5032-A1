@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
-    "api": "node api-server-simple.js",
+    "api": "node api-server-fixed.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run api\"",
     "build:full": "npm run build && npm run start:full",
     "start:full": "concurrently \"npm run serve\" \"npm run api\"",
