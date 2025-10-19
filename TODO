@@ -29,6 +29,8 @@ CAT F
 
 - appointment booking with calendar - when users join events, add that to their personal calendar (if they have one integrated) and check for schedule conflicts
 
+- or 2 APIS for external use - 
+
 GENERAL
 
 - make everything use data directly from firestore wherever possible instead of storing everything as reactive variables in useData()

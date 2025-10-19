@@ -1,0 +1,253 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDHliSu8Wed4qshBmKnNlibAIwk_YhSZNA",
+  authDomain: "fit5032-f8fd0.firebaseapp.com",
+  projectId: "fit5032-f8fd0",
+  storageBucket: "fit5032-f8fd0.firebasestorage.app",
+  messagingSenderId: "294294097041",
+  appId: "1:294294097041:web:c7abcc34d181a7f569c330"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+// Load playgrounds for coordinate mapping
+async function loadPlaygrounds() {
+  try {
+    const playgroundsSnapshot = await getDocs(collection(db, 'playgrounds'));
+    const playgrounds = playgroundsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    console.log(`Loaded ${playgrounds.length} playgrounds from Firestore`);
+    return playgrounds;
+  } catch (error) {
+    console.error('Error loading playgrounds:', error);
+    return [];
+  }
+}
+
+// Map location name to coordinates
+function getCoordinatesForLocation(locationName, playgrounds) {
+  const playground = playgrounds.find(p =>
+    p.name && p.name.toLowerCase().includes(locationName.toLowerCase()) ||
+    locationName.toLowerCase().includes(p.name.toLowerCase())
+  );
+
+  if (playground && playground.lat && playground.lng) {
+    return { lat: playground.lat, lng: playground.lng };
+  }
+
+  return null;
+}
+
+// Load activities from Firestore and map coordinates
+async function loadActivities() {
+  try {
+    console.log('Loading activities from Firestore...');
+    const [activitiesSnapshot, playgrounds] = await Promise.all([
+      getDocs(collection(db, 'activities')),
+      loadPlaygrounds()
+    ]);
+
+    const activities = activitiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+
+      // If activity doesn't have coordinates, try to map from location name
+      if (!data.lat || !data.lng) {
+        const coords = getCoordinatesForLocation(data.location, playgrounds);
+        if (coords) {
+          data.lat = coords.lat;
+          data.lng = coords.lng;
+        }
+      }
+
+      return {
+        id: doc.id,
+        ...data
+      };
+    });
+
+    console.log(`Loaded ${activities.length} activities from Firestore`);
+    return activities;
+  } catch (error) {
+    console.error('Error loading activities:', error);
+    return [];
+  }
+}
+
+// Haversine formula to calculate distance between two coordinates
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+}
+
+// API Routes
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  const activities = await loadActivities();
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    activitiesLoaded: activities.length,
+    note: 'Using Firestore data (same as Vue app)'
+  });
+});
+
+// Get nearby activities by coordinates
+app.get('/api/activities/nearby', async (req, res) => {
+  try {
+    const { lat, lng, limit = 5 } = req.query;
+
+    // Validate required parameters
+    if (!lat || !lng) {
+      return res.status(400).json({
+        error: 'Missing required parameters',
+        message: 'Both lat and lng query parameters are required'
+      });
+    }
+
+    // Validate coordinate values
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+    const limitNum = parseInt(limit);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({
+        error: 'Invalid coordinates',
+        message: 'lat and lng must be valid numbers'
+      });
+    }
+
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 50) {
+      return res.status(400).json({
+        error: 'Invalid limit',
+        message: 'limit must be a number between 1 and 50'
+      });
+    }
+
+    // Get activities from Firestore
+    const activities = await loadActivities();
+
+    // Calculate distances and sort activities
+    const activitiesWithDistance = activities
+      .filter(activity =>
+        activity.lat &&
+        activity.lng &&
+        !activity.deleted // Exclude deleted activities
+      )
+      .map(activity => {
+        const distance = calculateDistance(
+          latitude,
+          longitude,
+          activity.lat,
+          activity.lng
+        );
+
+        return {
+          ...activity,
+          distance: Math.round(distance * 100) / 100 // Round to 2 decimal places
+        };
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, limitNum);
+
+    res.json({
+      success: true,
+      data: activitiesWithDistance,
+      count: activitiesWithDistance.length,
+      requestedLimit: limitNum,
+      coordinates: {
+        lat: latitude,
+        lng: longitude
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error in /api/activities/nearby:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch nearby activities'
+    });
+  }
+});
+
+// Get all activities
+app.get('/api/activities', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    const limitNum = parseInt(limit);
+
+    const activities = await loadActivities();
+    const filteredActivities = activities
+      .filter(activity => !activity.deleted)
+      .slice(0, limitNum);
+
+    res.json({
+      success: true,
+      data: filteredActivities,
+      count: filteredActivities.length,
+      totalAvailable: activities.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error in /api/activities:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch activities'
+    });
+  }
+});
+
+// Error handling middleware
+app.use((err, req, res) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: 'Something went wrong'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    message: 'The requested endpoint does not exist'
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Express API server running on port ${PORT}`);
+  console.log(`📍 Nearby activities: GET /api/activities/nearby?lat=37.7749&lng=-122.4194&limit=5`);
+  console.log(`📋 All activities: GET /api/activities?limit=10`);
+  console.log(`❤️  Health check: GET /api/health`);
+  console.log(`📝 Note: Using Firestore data (same as Vue app)`);
+});
+
+export default app;
